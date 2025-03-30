@@ -1,64 +1,97 @@
+//HAY QUE COMENTAR TODO JAVADOC @Santiago
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+// Importar las clases necesarias
+import Vista.VistaEscenario;
+import Controlador.ControladorVistaEscenario;
+
 /**
  * Clase App
- * 
- * La Clase Principal donde se llama y declara las clases y sus metodos, además
- * de ejecutarse el codigo
- * 
- * @author Santiago
+ * Punto de entrada principal de la aplicación.
+ * Realiza la configuración inicial (directorios) e inicia el controlador del juego.
+ * @author Santiago 
  * @author Juan
- * @version 0.1
+ * @version 0.1.1 (Inicia Controlador con lógica Carga/Guardado)
  * @License GPL-3.0 license || ©2025
  */
 public class App {
+
+    // Constantes para configuración inicial
+    private static final String NOMBRE_ARCHIVO_CONFIG = "configuracion.txt";
+    // Asegurarse de que los directorios base para guardar/cargar existan
+    private static final String[] DIRECTORIOS_NECESARIOS = { "escenarios", "jugadores", "partidas" }; 
+
     public static void main(String[] args) {
-        String nombreArchivoConfiguracion = "configuracion.txt";
 
-        File archivoConfiguracion = new File(nombreArchivoConfiguracion);
+        System.out.println("Iniciando configuración del juego...");
 
-        if (archivoConfiguracion.exists()) {
-            System.out.println(
-                    "El archivo de configuración '" + nombreArchivoConfiguracion + "' ya existe. El programa termina.");
-            return;
-        } else {
+        crearArchivoConfiguracionSiNoExiste();
+        crearDirectoriosSiNoExisten();
+
+        System.out.println("Configuración inicial completada.");
+        System.out.println("-----------------------------------");
+
+        // Crear instancias de Vista y Controlador
+        try {
+            VistaEscenario vista = new VistaEscenario();
+            ControladorVistaEscenario controlador = new ControladorVistaEscenario(vista); //TODO: ControladorVistaEscenario @Santiago
+
+            // Iniciar el juego a través del controlador
+            // El controlador se encargará de cargar o crear Jugador y Escenario
+            controlador.iniciarOContinuarJuego(); //TODO: ControladorVistaEscenario @Santiago
+
+        } catch (IllegalArgumentException e) {
+             System.err.println("Error al inicializar el controlador/vista: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Ocurrió un error inesperado al iniciar el juego: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+             System.out.println("\nEl programa ha finalizado su ejecución.");
+        }
+    } // Fin de main
+
+    private static void crearArchivoConfiguracionSiNoExiste() {
+        File archivoConfiguracion = new File(NOMBRE_ARCHIVO_CONFIG);
+        if (!archivoConfiguracion.exists()) {
             try {
                 if (archivoConfiguracion.createNewFile()) {
-                    System.out.println(
-                            "El archivo de configuración '" + nombreArchivoConfiguracion + "' ha sido creado.");
+                    System.out.println("Archivo de configuración '" + NOMBRE_ARCHIVO_CONFIG + "' creado.");
                 } else {
-                    System.err.println(
-                            "No se pudo crear el archivo de configuración '" + nombreArchivoConfiguracion + "'.");
-                    return;
+                    System.err.println("No se pudo crear el archivo de configuración '" + NOMBRE_ARCHIVO_CONFIG + "'.");
                 }
             } catch (IOException e) {
                 System.err.println("Error al crear el archivo de configuración: " + e.getMessage());
-                e.printStackTrace();
-                return;
+                e.printStackTrace(); 
             }
+        } else {
+             System.out.println("Archivo de configuración '" + NOMBRE_ARCHIVO_CONFIG + "' ya existe.");
         }
+    }
 
-        String[] directorios = { "escenarios", "jugadores", "partidas" };
-
-        for (String nombreDirectorios : directorios) {
-            Path rutaDirectorio = Paths.get(nombreDirectorios);
-            if (!Files.exists(rutaDirectorio) || !Files.isDirectory(rutaDirectorio)) {
+    private static void crearDirectoriosSiNoExisten() {
+        System.out.println("Verificando/creando directorios necesarios...");
+        for (String nombreDirectorio : DIRECTORIOS_NECESARIOS) {
+            Path rutaDirectorio = Paths.get(nombreDirectorio);
+            if (!Files.exists(rutaDirectorio)) {
                 try {
                     Files.createDirectories(rutaDirectorio);
-                    System.out.println("Directorio '" + nombreDirectorios + "' creado.");
+                    System.out.println("Directorio '" + nombreDirectorio + "' creado en: " + rutaDirectorio.toAbsolutePath());
                 } catch (IOException e) {
-                    System.err.println("No se pudo crear el directorio '" + nombreDirectorios + "': " + e.getMessage());
-                    e.printStackTrace();
+                    System.err.println("No se pudo crear el directorio '" + nombreDirectorio + "': " + e.getMessage());
+                    e.printStackTrace(); 
                 }
             } else {
-                System.out.println("El directorio '" + nombreDirectorios + "' ya existe.");
+                 if (!Files.isDirectory(rutaDirectorio)) {
+                     System.err.println("Error: La ruta '" + nombreDirectorio + "' existe pero no es un directorio.");
+                 } else {
+                      System.out.println("Directorio '" + nombreDirectorio + "' ya existe.");
+                 }
             }
         }
-        System.out.println("El programa ha finalizado su ejecución.");
-
     }
 }
