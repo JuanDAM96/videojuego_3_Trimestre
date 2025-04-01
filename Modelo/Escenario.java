@@ -7,13 +7,26 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+/**
+ * Clase que representa un escenario compuesto por una matriz de objetos.
+ * Permite la manipulación del escenario y su almacenamiento/carga desde archivos.
+ */
 public class Escenario {
 
-    //Atributos
+    /** Matriz bidimensional que representa el mapa del escenario. */
     private ObjetoEscenario[][] mapa;
-    private static final char SEPARADOR_CELDA = ' '; // Espacio entre celdas en el archivo
-    private static final char SEPARADOR_CHARS = ':'; // Separa carácter de booleano en archivo
+    /** Caracter usado para separar celdas en el archivo de guardado. */
+    private static final char SEPARADOR_CELDA = ' '; 
+    /** Caracter usado para separar el objeto del estado de bloqueo en el archivo. */
+    private static final char SEPARADOR_CHARS = ':'; 
 
+    /**
+     * Constructor de la clase Escenario.
+     * 
+     * @param filas Número de filas del escenario.
+     * @param columnas Número de columnas del escenario.
+     * @throws IllegalArgumentException Si las dimensiones no son positivas.
+     */
     public Escenario(int filas, int columnas) {
         if (filas <= 0 || columnas <= 0) {
             throw new IllegalArgumentException("Las dimensiones del escenario deben ser positivas.");
@@ -21,20 +34,41 @@ public class Escenario {
         this.mapa = new ObjetoEscenario[filas][columnas];
     }
 
-    // --- GETTERS ---
+    /**
+     * Obtiene el mapa del escenario.
+     * 
+     * @return Matriz bidimensional de objetos del escenario.
+     */
     public ObjetoEscenario[][] getMapa() { 
         return mapa; 
     }
 
+    /**
+     * Obtiene el número de filas del escenario.
+     * 
+     * @return Número de filas.
+     */
     public int getFilas() { 
         return (this.mapa != null) ? this.mapa.length : 0; 
     }
 
+    /**
+     * Obtiene el número de columnas del escenario.
+     * 
+     * @return Número de columnas.
+     */
     public int getColumnas() { 
         return (this.mapa != null && this.mapa.length > 0) ? this.mapa[0].length : 0; 
     }
 
-    // --- MÉTODOS PARA MANIPULAR EL MAPA ---
+    /**
+     * Coloca un objeto en una posición específica del mapa.
+     * 
+     * @param fila Fila donde colocar el objeto.
+     * @param columna Columna donde colocar el objeto.
+     * @param objeto Objeto a colocar.
+     * @return true si se colocó con éxito, false si la posición es inválida.
+     */
     public boolean colocarObjeto(int fila, int columna, ObjetoEscenario objeto) {
         if (esPosicionValida(fila, columna)) {
             this.mapa[fila][columna] = objeto;
@@ -43,6 +77,13 @@ public class Escenario {
         return false;
     }
 
+    /**
+     * Obtiene el objeto en una posición específica.
+     * 
+     * @param fila Fila de la posición.
+     * @param columna Columna de la posición.
+     * @return Objeto en la posición especificada o null si está vacía.
+     */
     public ObjetoEscenario getObjetoEn(int fila, int columna) {
         if (esPosicionValida(fila, columna)) {
             return this.mapa[fila][columna];
@@ -50,12 +91,24 @@ public class Escenario {
         return null;
     }
 
+    /**
+     * Verifica si una posición en el mapa es válida.
+     * 
+     * @param fila Fila de la posición.
+     * @param columna Columna de la posición.
+     * @return true si la posición es válida, false en caso contrario.
+     */
     public boolean esPosicionValida(int fila, int columna) {
         return fila >= 0 && fila < getFilas() && columna >= 0 && columna < getColumnas();
     }
 
     // GUARDAR/CARGAR
-
+    /**
+     * Guarda el estado del escenario en un archivo de texto.
+     * 
+     * @param rutaArchivo Ruta del archivo donde se guardará el escenario.
+     * @return true si la operación fue exitosa, false en caso de error.
+     */
     public boolean guardarEnArchivo(String rutaArchivo) {
         Path ruta = Paths.get(rutaArchivo);
          try {
@@ -102,6 +155,12 @@ public class Escenario {
         }
     }
 
+    /**
+     * Carga un escenario desde un archivo de texto.
+     * 
+     * @param rutaArchivo Ruta del archivo a cargar.
+     * @return Instancia de Escenario cargada desde el archivo o null si hubo un error.
+     */
     public static Escenario cargarDesdeArchivo(String rutaArchivo) {
         Path ruta = Paths.get(rutaArchivo);
         if (!Files.exists(ruta) || !Files.isReadable(ruta)) {
@@ -134,7 +193,8 @@ public class Escenario {
                  System.err.println("Error: Dimensiones inválidas o no encontradas en '" + rutaArchivo + "'.");
                  return null;
             }
-
+            
+            // Crear nuevo mapa con las dimensiones leídas
             escenario = new Escenario(filas, columnas);
 
             // Leer el mapa
