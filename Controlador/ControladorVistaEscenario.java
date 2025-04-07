@@ -11,7 +11,6 @@ import java.nio.file.Paths;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 import java.io.BufferedWriter;
-import java.io.IOException; // Para limpiar pantalla
 
 /**
  * Clase ControladorVistaEscenario

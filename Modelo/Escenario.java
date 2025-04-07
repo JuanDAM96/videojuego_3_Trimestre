@@ -1,3 +1,5 @@
+//Los 4 esenarios son el mismo aun. Y hay que añadir mas obstaculos
+
 package Modelo;
 
 import java.io.BufferedReader;
@@ -6,41 +8,51 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
- * Clase que representa un escenario compuesto por una matriz de objetos.
- * Permite la manipulación del escenario y su almacenamiento/carga desde archivos.
+ * Clase que representa un escenario en un videojuego.
+ * El escenario está compuesto por una matriz de objetos que representan celdas del mapa.
+ * Proporciona métodos para manipular el mapa y guardar/cargar su estado en un archivo.
  */
 public class Escenario {
 
-    /** Matriz bidimensional que representa el mapa del escenario. */
+    // Atributos
     private ObjetoEscenario[][] mapa;
-    /** Caracter usado para separar celdas en el archivo de guardado. */
-    private static final char SEPARADOR_CELDA = ' '; 
-    /** Caracter usado para separar el objeto del estado de bloqueo en el archivo. */
-    private static final char SEPARADOR_CHARS = ':'; 
+    private int filas;
+    private int columnas;
+
+    // Constantes para el formato del escenario
+    private static final char ESPACIO_VACIO = 'E';
+    private static final char OBJETO_BLOQUEANTE = 'O';
+    private static final char OBJETO_NO_BLOQUEANTE_DEFAULT = '.'; // Para otros caracteres no definidos como E u O
 
     /**
-     * Constructor de la clase Escenario.
+     * Constructor privado para inicializar un escenario con las dimensiones especificadas.
      * 
-     * @param filas Número de filas del escenario.
+     * @param filas    Número de filas del escenario.
      * @param columnas Número de columnas del escenario.
-     * @throws IllegalArgumentException Si las dimensiones no son positivas.
+     * @throws IllegalArgumentException Si las dimensiones son menores o iguales a 0.
      */
-    public Escenario(int filas, int columnas) {
+    private Escenario(int filas, int columnas) {
         if (filas <= 0 || columnas <= 0) {
             throw new IllegalArgumentException("Las dimensiones del escenario deben ser positivas.");
         }
+        this.filas = filas;
+        this.columnas = columnas;
         this.mapa = new ObjetoEscenario[filas][columnas];
     }
 
+    // --- GETTERS ---
+
     /**
-     * Obtiene el mapa del escenario.
+     * Obtiene la matriz que representa el mapa del escenario.
      * 
-     * @return Matriz bidimensional de objetos del escenario.
+     * @return La matriz de objetos del escenario.
      */
-    public ObjetoEscenario[][] getMapa() { 
-        return mapa; 
+    public ObjetoEscenario[][] getMapa() {
+        return mapa;
     }
 
     /**
@@ -48,8 +60,8 @@ public class Escenario {
      * 
      * @return Número de filas.
      */
-    public int getFilas() { 
-        return (this.mapa != null) ? this.mapa.length : 0; 
+    public int getFilas() {
+        return filas;
     }
 
     /**
@@ -57,17 +69,19 @@ public class Escenario {
      * 
      * @return Número de columnas.
      */
-    public int getColumnas() { 
-        return (this.mapa != null && this.mapa.length > 0) ? this.mapa[0].length : 0; 
+    public int getColumnas() {
+        return columnas;
     }
+
+    // --- MÉTODOS PARA MANIPULAR EL MAPA ---
 
     /**
      * Coloca un objeto en una posición específica del mapa.
      * 
-     * @param fila Fila donde colocar el objeto.
-     * @param columna Columna donde colocar el objeto.
-     * @param objeto Objeto a colocar.
-     * @return true si se colocó con éxito, false si la posición es inválida.
+     * @param fila    Fila donde se colocará el objeto.
+     * @param columna Columna donde se colocará el objeto.
+     * @param objeto  El objeto a colocar.
+     * @return true si el objeto se colocó correctamente, false si la posición no es válida.
      */
     public boolean colocarObjeto(int fila, int columna, ObjetoEscenario objeto) {
         if (esPosicionValida(fila, columna)) {
@@ -78,11 +92,11 @@ public class Escenario {
     }
 
     /**
-     * Obtiene el objeto en una posición específica.
+     * Obtiene el objeto en una posición específica del mapa.
      * 
-     * @param fila Fila de la posición.
+     * @param fila    Fila de la posición.
      * @param columna Columna de la posición.
-     * @return Objeto en la posición especificada o null si está vacía.
+     * @return El objeto en la posición especificada, o null si no hay objeto o la posición no es válida.
      */
     public ObjetoEscenario getObjetoEn(int fila, int columna) {
         if (esPosicionValida(fila, columna)) {
@@ -92,9 +106,9 @@ public class Escenario {
     }
 
     /**
-     * Verifica si una posición en el mapa es válida.
+     * Verifica si una posición es válida dentro del mapa.
      * 
-     * @param fila Fila de la posición.
+     * @param fila    Fila de la posición.
      * @param columna Columna de la posición.
      * @return true si la posición es válida, false en caso contrario.
      */
@@ -102,16 +116,36 @@ public class Escenario {
         return fila >= 0 && fila < getFilas() && columna >= 0 && columna < getColumnas();
     }
 
-    // GUARDAR/CARGAR
     /**
-     * Guarda el estado del escenario en un archivo de texto.
+     * Verifica si una posición está bloqueada.
+     * Una posición está bloqueada si está fuera de los límites del mapa o si contiene un objeto bloqueante.
      * 
-     * @param rutaArchivo Ruta del archivo donde se guardará el escenario.
-     * @return true si la operación fue exitosa, false en caso de error.
+     * @param fila    Fila de la posición.
+     * @param columna Columna de la posición.
+     * @return true si la posición está bloqueada, false en caso contrario.
      */
-    public boolean guardarEnArchivo(String rutaArchivo) {
+    public boolean esPosicionBloqueada(int fila, int columna) {
+        if (!esPosicionValida(fila, columna)) {
+            return true;
+        }
+        ObjetoEscenario obj = getObjetoEn(fila, columna);
+        return obj != null && obj.isBloqueo();
+    }
+
+    // --- GUARDAR/CARGAR con NUEVO FORMATO ---
+
+    /**
+     * Guarda el escenario en un archivo de texto con el nuevo formato.
+     * 
+     * Formato del archivo:
+     * Línea 1: Dimensiones del mapa en el formato "AnchoXAlto" (ej: "80X20")
+     * Línea 2: Descripción comprimida del mapa (ej: "25E 35O 25E")
+     * @param rutaArchivo La ruta del archivo .txt donde guardar.
+     * @return true si se guardó correctamente, false en caso contrario.
+     */
+    public boolean guardarEnArchivoNuevoFormato(String rutaArchivo) {
         Path ruta = Paths.get(rutaArchivo);
-         try {
+        try {
             // Asegurarse de que el directorio padre exista
             Path directorioPadre = ruta.getParent();
             if (directorioPadre != null && !Files.exists(directorioPadre)) {
@@ -120,136 +154,197 @@ public class Escenario {
 
             try (BufferedWriter writer = Files.newBufferedWriter(ruta)) {
                 // Guardar dimensiones
-                writer.write("filas=" + getFilas());
-                writer.newLine();
-                writer.write("columnas=" + getColumnas());
+                writer.write(getColumnas() + "X" + getFilas()); // Formato AnchoXAlto
                 writer.newLine();
 
-                // Guardar el mapa
+                // Guardar el mapa en el formato "NE NO NE..."
+                StringBuilder lineaMapa = new StringBuilder();
+                int contador = 0;
+                char tipoActual = ' '; // Inicializar con un valor no válido
+
                 for (int i = 0; i < getFilas(); i++) {
-                    StringBuilder linea = new StringBuilder();
                     for (int j = 0; j < getColumnas(); j++) {
                         ObjetoEscenario obj = this.mapa[i][j];
-                        if (obj != null) {
-                            linea.append(obj.getObjetoChar());
-                            linea.append(SEPARADOR_CHARS);
-                            linea.append(obj.isBloqueo() ? 'T' : 'F');
+                        char tipoCelda;
+                        boolean bloqueoCelda;
+
+                        if (obj == null) {
+                            tipoCelda = ESPACIO_VACIO; // Asumir null como espacio vacío
+                            bloqueoCelda = false;
                         } else {
-                            linea.append('.'); // Carácter especial para representar null
-                            linea.append(SEPARADOR_CHARS);
-                            linea.append('F'); 
+                            tipoCelda = obj.getObjetoChar();
+                            bloqueoCelda = obj.isBloqueo();
                         }
-                        if (j < getColumnas() - 1) {
-                            linea.append(SEPARADOR_CELDA); // Añadir separador entre celdas
+
+                        // Determinar el carácter representativo (E o O)
+                        char representacion = (bloqueoCelda) ? OBJETO_BLOQUEANTE : ESPACIO_VACIO;
+
+                        if (contador == 0) {
+                            // Primer elemento
+                            tipoActual = representacion;
+                            contador = 1;
+                        } else if (representacion == tipoActual) {
+                            // Mismo tipo, incrementar contador
+                            contador++;
+                        } else {
+                            // Diferente tipo, escribir el anterior y empezar nuevo conteo
+                            if (lineaMapa.length() > 0) {
+                                lineaMapa.append(" "); // Separador
+                            }
+                            lineaMapa.append(contador).append(tipoActual);
+                            tipoActual = representacion;
+                            contador = 1;
                         }
                     }
-                    writer.write(linea.toString());
-                    writer.newLine();
                 }
+                // Escribir el último grupo contado
+                if (contador > 0) {
+                     if (lineaMapa.length() > 0) {
+                        lineaMapa.append(" "); // Separador
+                    }
+                    lineaMapa.append(contador).append(tipoActual);
+                }
+
+                writer.write(lineaMapa.toString());
+                writer.newLine(); // Añadir una nueva línea al final si se prefiere
             }
             return true;
         } catch (IOException e) {
-            System.err.println("Error al guardar el escenario en '" + rutaArchivo + "': " + e.getMessage());
+            System.err.println("Error al guardar el escenario (nuevo formato) en '" + rutaArchivo + "': " + e.getMessage());
             e.printStackTrace();
             return false;
         }
     }
 
     /**
-     * Carga un escenario desde un archivo de texto.
+     * Carga un escenario desde un archivo de texto con el nuevo formato.
+     * Línea 1: Dimensiones (ej: "80X20")
+     * Línea 2: Descripción del mapa (ej: "25E 35O 25E")
      * 
-     * @param rutaArchivo Ruta del archivo a cargar.
-     * @return Instancia de Escenario cargada desde el archivo o null si hubo un error.
+     * @param rutaArchivo La ruta del archivo .txt desde donde cargar.
+     * @return El Escenario cargado, o null si hay errores.
      */
-    public static Escenario cargarDesdeArchivo(String rutaArchivo) {
+    public static Escenario cargarDesdeArchivoNuevoFormato(String rutaArchivo) {
         Path ruta = Paths.get(rutaArchivo);
         if (!Files.exists(ruta) || !Files.isReadable(ruta)) {
-            System.out.println("Archivo de escenario no encontrado o sin permisos: " + rutaArchivo);
+            System.out.println("Archivo de escenario (nuevo formato) no encontrado o sin permisos: " + rutaArchivo);
             return null;
         }
 
+        Escenario escenario = null;
         int filas = -1;
         int columnas = -1;
-        Escenario escenario = null;
 
         try (BufferedReader reader = Files.newBufferedReader(ruta)) {
-            String linea;
-
-            // Leer dimensiones
-            while ((linea = reader.readLine()) != null) {
-                 linea = linea.trim();
-                 if (linea.startsWith("filas=")) {
-                     filas = Integer.parseInt(linea.substring("filas=".length()));
-                 } else if (linea.startsWith("columnas=")) {
-                     columnas = Integer.parseInt(linea.substring("columnas=".length()));
-                 }
-                 // Si ya tenemos ambas dimensiones, salimos del bucle
-                 if (filas > 0 && columnas > 0) {
-                     break;
-                 }
+            // --- Leer Línea 1: Dimensiones ---
+            String lineaDimensiones = reader.readLine();
+            if (lineaDimensiones == null || lineaDimensiones.trim().isEmpty()) {
+                System.err.println("Error: Falta la línea de dimensiones en '" + rutaArchivo + "'.");
+                return null;
+            }
+            lineaDimensiones = lineaDimensiones.trim().toUpperCase(); // Convertir a mayúsculas por si acaso X está en minúscula
+            String[] partesDimensiones = lineaDimensiones.split("X");
+            if (partesDimensiones.length != 2) {
+                System.err.println("Error: Formato de dimensiones inválido ('" + lineaDimensiones + "'). Se esperaba 'AnchoXAlto' en '" + rutaArchivo + "'.");
+                return null;
+            }
+            try {
+                columnas = Integer.parseInt(partesDimensiones[0]);
+                filas = Integer.parseInt(partesDimensiones[1]);
+            } catch (NumberFormatException e) {
+                System.err.println("Error: Dimensiones no numéricas ('" + lineaDimensiones + "') en '" + rutaArchivo + "'.");
+                return null;
             }
 
             if (filas <= 0 || columnas <= 0) {
-                 System.err.println("Error: Dimensiones inválidas o no encontradas en '" + rutaArchivo + "'.");
-                 return null;
+                System.err.println("Error: Dimensiones inválidas (<= 0) en '" + rutaArchivo + "'.");
+                return null;
             }
-            
-            // Crear nuevo mapa con las dimensiones leídas
+
+            // Crear el escenario con las dimensiones leídas
             escenario = new Escenario(filas, columnas);
 
-            // Leer el mapa
-            for (int i = 0; i < filas; i++) {
-                linea = reader.readLine();
-                if (linea == null) {
-                    System.err.println("Error: Faltan filas en el mapa del archivo '" + rutaArchivo + "'. Fila esperada: " + (i+1));
-                    return null; 
-                }
-                // Dividir la línea en celdas usando el separador de celda
-                String[] celdasStr = linea.trim().split(String.valueOf(SEPARADOR_CELDA)); 
-                if (celdasStr.length != columnas) {
-                     System.err.println("Error: Número incorrecto de columnas en la fila " + (i+1) + " del archivo '" + rutaArchivo + "'. Esperadas: " + columnas + ", encontradas: " + celdasStr.length);
-                     return null; 
-                }
+            // --- Leer Línea 2: Definición del Mapa ---
+            String lineaMapa = reader.readLine();
+            if (lineaMapa == null || lineaMapa.trim().isEmpty()) {
+                System.err.println("Error: Falta la línea de definición del mapa en '" + rutaArchivo + "'.");
+                return null;
+            }
+            lineaMapa = lineaMapa.trim();
 
-                for (int j = 0; j < columnas; j++) {
-                    String celda = celdasStr[j];
-                    // Dividir la celda en carácter y booleano usando el separador de propiedades
-                    String[] partes = celda.split(String.valueOf(SEPARADOR_CHARS)); 
-                    if (partes.length != 2 || partes[0].length() != 1 || partes[1].length() != 1) {
-                         System.err.println("Error: Formato de celda inválido '" + celda + "' en fila " + (i+1) + ", columna " + (j+1) + " del archivo '" + rutaArchivo + "'.");
-                         return null; 
+            // Patrón para extraer "NE" o "NO" (Número y Tipo)
+            Pattern pattern = Pattern.compile("(\\d+)([EO])"); // Grupo 1: número, Grupo 2: E o O
+            Matcher matcher = pattern.matcher(lineaMapa);
+
+            int filaActual = 0;
+            int columnaActual = 0;
+            int celdasProcesadas = 0;
+
+            while (matcher.find()) {
+                int cantidad = Integer.parseInt(matcher.group(1));
+                char tipo = matcher.group(2).charAt(0); // E o O
+
+                boolean esBloqueante = (tipo == OBJETO_BLOQUEANTE);
+                char caracterObjeto = (tipo == OBJETO_BLOQUEANTE) ? '#' : '.'; // Carácter visual (puedes cambiarlo)
+
+                for (int k = 0; k < cantidad; k++) {
+                    if (filaActual >= filas || columnaActual >= columnas) {
+                        System.err.println("Error: La definición del mapa excede las dimensiones especificadas en '" + rutaArchivo + "'.");
+                        return null; // Demasiados elementos definidos
                     }
-                    
-                    char objetoChar = partes[0].charAt(0);
-                    char bloqueoChar = partes[1].charAt(0);
 
-                    if (objetoChar == '.') { // '.' representa null
-                        escenario.colocarObjeto(i, j, null);
-                    } else {
-                        boolean bloqueo = (bloqueoChar == 'T');
-                        escenario.colocarObjeto(i, j, new ObjetoEscenario(objetoChar, bloqueo));
+                    // Colocar el objeto en el mapa
+                    escenario.colocarObjeto(filaActual, columnaActual, new ObjetoEscenario(caracterObjeto, esBloqueante));
+                    celdasProcesadas++;
+
+                    // Avanzar a la siguiente celda
+                    columnaActual++;
+                    if (columnaActual >= columnas) {
+                        columnaActual = 0;
+                        filaActual++;
                     }
                 }
             }
-             // Verificar si se leyeron más líneas de las esperadas (podría indicar un error)
-             if (reader.readLine() != null) {
-                 System.err.println("Advertencia: Hay datos adicionales inesperados al final del archivo '" + rutaArchivo + "'.");
+
+             // Verificar si se procesaron todas las celdas esperadas
+            if (celdasProcesadas != filas * columnas) {
+                 System.err.println("Error: La definición del mapa no coincide con las dimensiones especificadas en '" + rutaArchivo + "'. " +
+                                    "Esperadas: " + (filas * columnas) + ", Procesadas: " + celdasProcesadas);
+                 return null;
+            }
+
+             // Verificar si hay contenido extra no esperado en la línea del mapa
+             int endLastMatch = -1;
+             matcher.reset(); // Reiniciar el matcher para buscar de nuevo
+             while (matcher.find()) {
+                 endLastMatch = matcher.end();
+             }
+             // Buscar si hay caracteres después del último match que no sean espacios
+             if (endLastMatch != -1 && endLastMatch < lineaMapa.length() && !lineaMapa.substring(endLastMatch).trim().isEmpty()) {
+                  System.err.println("Advertencia: Caracteres extra encontrados al final de la línea de definición del mapa en '" + rutaArchivo + "': '" + lineaMapa.substring(endLastMatch).trim() + "'");
              }
 
+
+            // Verificar si hay más líneas inesperadas en el archivo
+            if (reader.readLine() != null) {
+                System.err.println("Advertencia: Hay datos adicionales inesperados al final del archivo '" + rutaArchivo + "'.");
+            }
+
         } catch (IOException e) {
-            System.err.println("Error de E/S al cargar el escenario desde '" + rutaArchivo + "': " + e.getMessage());
+            System.err.println("Error de E/S al cargar el escenario (nuevo formato) desde '" + rutaArchivo + "': " + e.getMessage());
             e.printStackTrace();
             return null;
         } catch (NumberFormatException e) {
-            System.err.println("Error: Formato numérico inválido para dimensiones en '" + rutaArchivo + "': " + e.getMessage());
+            // Captura errores al parsear números en la definición del mapa (ej. "A5E")
+            System.err.println("Error: Formato numérico inválido en la definición del mapa en '" + rutaArchivo + "': " + e.getMessage());
             return null;
         } catch (IllegalArgumentException e) {
-            System.err.println("Error al crear escenario desde archivo '" + rutaArchivo + "': " + e.getMessage());
+            System.err.println("Error al crear escenario desde archivo (nuevo formato) '" + rutaArchivo + "': " + e.getMessage());
             return null;
-        } catch (Exception e) { 
-             System.err.println("Error inesperado durante la carga del escenario desde '" + rutaArchivo + "': " + e.getMessage());
-             e.printStackTrace();
-             return null;
+        } catch (Exception e) { // Captura general para otros errores inesperados
+            System.err.println("Error inesperado durante la carga del escenario (nuevo formato) desde '" + rutaArchivo + "': " + e.getMessage());
+            e.printStackTrace();
+            return null;
         }
 
         return escenario;

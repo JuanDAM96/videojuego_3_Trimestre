@@ -1,8 +1,11 @@
 package Modelo;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -10,26 +13,33 @@ import java.util.Objects;
 
 /**
  * Clase Jugador
- * 
- * La Clase Jugador Representa al jugador dentro del juego, Guarda/Carga datos
- * en formato de texto (.txt).
+ *
+ * Representa al jugador dentro del juego. Guarda/Carga datos en formato binario
+ * (.bin). Incluye la posición del jugador en el escenario.
  * 
  * @author Santiago
  * @author Juan
- * @version 0.1.1
- * @License GPL-3.0 license || ©2025
+ * @version 0.2.0 (Guardado Binario y Posición)
+ * @license GPL-3.0 license || ©2025
  */
-public class Jugador {
+public class Jugador implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private String nombre;
     private String correo;
+    private int fila; // Posición actual del jugador
+    private int columna; // Posición actual del jugador
 
     /**
      * Constructor parametrizado
-     * 
-     * @param nombre Nombre del jugador
-     * @param correo Correo del jugador
-     **/
-    public Jugador(String nombre, String correo) {
+     *
+     * @param nombre         Nombre del jugador.
+     * @param correo         Correo del jugador.
+     * @param filaInicial    Fila inicial del jugador.
+     * @param columnaInicial Columna inicial del jugador.
+     * @throws IllegalArgumentException Si el nombre o el correo están vacíos.
+     */
+    public Jugador(String nombre, String correo, int filaInicial, int columnaInicial) {
         if (nombre == null || nombre.trim().isEmpty()) {
             throw new IllegalArgumentException("El nombre del jugador no puede estar vacío.");
         }
@@ -38,109 +48,134 @@ public class Jugador {
         }
         this.nombre = nombre.trim();
         this.correo = correo.trim();
+        this.fila = filaInicial >= 0 ? filaInicial : 0;
+        this.columna = columnaInicial >= 0 ? columnaInicial : 0;
     }
 
+    // --- GETTERS ---
+
+    /**
+     * Obtiene el nombre del jugador.
+     * 
+     * @return El nombre del jugador.
+     */
     public String getNombre() {
         return nombre;
     }
 
+    /**
+     * Obtiene el correo del jugador.
+     * 
+     * @return El correo del jugador.
+     */
     public String getCorreo() {
         return correo;
     }
 
     /**
-     * Guarda los datos del jugador actual en el archivo de texto especificado.
-     * Formato: una propiedad por línea (nombre=valor).
+     * Obtiene la fila actual del jugador.
      * 
-     * @param rutaArchivo La ruta completa del archivo .txt donde guardar los datos.
+     * @return La fila actual del jugador.
+     */
+    public int getFila() {
+        return fila;
+    }
+
+    /**
+     * Obtiene la columna actual del jugador.
+     * 
+     * @return La columna actual del jugador.
+     */
+    public int getColumna() {
+        return columna;
+    }
+
+    // --- SETTERS ---
+
+    /**
+     * Establece la posición del jugador en el escenario.
+     * 
+     * @param fila    Nueva fila del jugador.
+     * @param columna Nueva columna del jugador.
+     */
+    public void setPosicion(int fila, int columna) {
+        this.fila = fila;
+        this.columna = columna;
+    }
+
+    // --- MÉTODOS PARA GUARDAR Y CARGAR ---
+
+    /**
+     * Guarda los datos del jugador actual en un archivo binario.
+     * 
+     * @param rutaArchivo La ruta completa del archivo .bin donde guardar los datos.
      * @return true si se guardó correctamente, false en caso de error.
-     **/
-    public boolean guardarEnArchivo(String rutaArchivo) {
+     */
+    public boolean guardarEnArchivoBinario(String rutaArchivo) {
         Path ruta = Paths.get(rutaArchivo);
         try {
             Path directorioPadre = ruta.getParent();
             if (directorioPadre != null && !Files.exists(directorioPadre)) {
                 Files.createDirectories(directorioPadre);
             }
-
-            try (BufferedWriter writer = Files.newBufferedWriter(ruta)) {
-                writer.write("nombre=" + this.nombre);
-                writer.newLine();
-                writer.write("correo=" + this.correo);
-                writer.newLine();
+            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(ruta.toFile()))) {
+                oos.writeObject(this);
             }
             return true;
         } catch (IOException e) {
-            System.err.println("Error al guardar el jugador en '" + rutaArchivo + "': " + e.getMessage());
+            System.err.println("Error al guardar el jugador en archivo binario '" + rutaArchivo + "': " + e.getMessage());
             e.printStackTrace();
             return false;
         }
     }
 
     /**
-     * Carga los datos de un jugador desde el archivo de texto especificado.
-     * Espera el formato: una propiedad por línea (nombre=valor).
+     * Carga los datos de un jugador desde un archivo binario.
      * 
-     * @param rutaArchivo La ruta completa del archivo .txt desde donde cargar los
+     * @param rutaArchivo La ruta completa del archivo .bin desde donde cargar los
      *                    datos.
      * @return Una instancia de Jugador si la carga fue exitosa, null en caso de
-     *         error o archivo no encontrado.
-     **/
-    public static Jugador cargarDesdeArchivo(String rutaArchivo) {
+     *         error.
+     */
+    public static Jugador cargarDesdeArchivoBinario(String rutaArchivo) {
         Path ruta = Paths.get(rutaArchivo);
         if (!Files.exists(ruta) || !Files.isReadable(ruta)) {
+            System.out.println("Archivo binario de jugador no encontrado o sin permisos: " + rutaArchivo);
             return null;
         }
-
-        String nombre = null;
-        String correo = null;
-
-        try (BufferedReader reader = Files.newBufferedReader(ruta)) {
-            String linea;
-            while ((linea = reader.readLine()) != null) {
-                linea = linea.trim();
-                if (linea.startsWith("nombre=")) {
-                    nombre = linea.substring("nombre=".length());
-                } else if (linea.startsWith("correo=")) {
-                    correo = linea.substring("correo=".length());
-                }
-
-            }
-
-            if (nombre != null && correo != null) {
-                return new Jugador(nombre, correo);
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(ruta.toFile()))) {
+            Object obj = ois.readObject();
+            if (obj instanceof Jugador) {
+                return (Jugador) obj;
             } else {
-                System.err.println(
-                        "Error: Formato de archivo de jugador inválido o incompleto en '" + rutaArchivo + "'.");
+                System.err.println("Error: El archivo binario '" + rutaArchivo + "' no contiene un objeto Jugador válido.");
                 return null;
             }
-
-        } catch (IOException e) {
-            System.err.println("Error al cargar el jugador desde '" + rutaArchivo + "': " + e.getMessage());
+        } catch (IOException | ClassNotFoundException e) {
+            System.err.println("Error al cargar el jugador desde archivo binario '" + rutaArchivo + "': " + e.getMessage());
             e.printStackTrace();
-            return null;
-        } catch (IllegalArgumentException e) {
-            System.err.println("Error al crear jugador desde archivo '" + rutaArchivo + "': " + e.getMessage());
             return null;
         }
     }
 
+    // --- MÉTODOS OVERRIDE ---
+
     /**
-     * Pone en String toda la informacion del jugador
+     * Devuelve una representación en String de la información del jugador.
      * 
-     * @return String. devuelve toda la informacion del jugador
+     * @return Una cadena con la información del jugador.
      */
     @Override
     public String toString() {
-        return "Jugador [nombre=" + nombre + ", correo=" + correo + "]";
+        return "Jugador [nombre=" + nombre + ", correo=" + correo + ", fila=" + fila + ", columna=" + columna + "]";
     }
 
     /**
-     * Comparador de objetos. Compara todos los parametros que se le pasan.
+     * Compara este jugador con otro objeto.
      * 
-     * @param objeto Objeto que se le pasa como parametro
-     * @return boolean. Confirma con un true/false si son iguales
-     **/
+     * @param objeto Objeto a comparar.
+     * @return true si los objetos son iguales, false en caso contrario.
+     */
     @Override
     public boolean equals(Object objeto) {
         if (this == objeto)
@@ -148,16 +183,19 @@ public class Jugador {
         if (objeto == null || getClass() != objeto.getClass())
             return false;
         Jugador jugador = (Jugador) objeto;
-        return Objects.equals(nombre, jugador.nombre) && Objects.equals(correo, jugador.correo);
+        return fila == jugador.fila &&
+               columna == jugador.columna &&
+               Objects.equals(nombre, jugador.nombre) &&
+               Objects.equals(correo, jugador.correo);
     }
 
     /**
-     * Numero que devuelve el hash
+     * Calcula el código hash del jugador.
      * 
-     * @return int. Numero del hash a traves de su numero y correo
+     * @return Un entero que representa el código hash del jugador.
      */
     @Override
     public int hashCode() {
-        return Objects.hash(nombre, correo);
+        return Objects.hash(nombre, correo, fila, columna);
     }
 }
