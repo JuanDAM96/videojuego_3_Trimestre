@@ -3,8 +3,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import Vista.VistaEscenario;
-import Controlador.ControladorVistaEscenario;
+import java.util.Scanner;
+
+
 
 /**
  * Clase App
@@ -19,29 +20,17 @@ import Controlador.ControladorVistaEscenario;
  */
 public class App {
 
-    // Constantes para configuración inicial
+    private static final Scanner teclado = new Scanner(System.in);
     private static final String NOMBRE_ARCHIVO_CONFIG = "configuracion.txt";
-    // Asegurarse de que los directorios base para guardar/cargar existan
     private static final String[] DIRECTORIOS_NECESARIOS = { "escenarios", "jugadores", "partidas" };
 
     public static void main(String[] args) {
-
-        System.out.println("Iniciando configuración del juego...");
-
         crearArchivoConfiguracionSiNoExiste();
         crearDirectoriosSiNoExisten();
 
-        System.out.println("Configuración inicial completada.");
-        System.out.println("-----------------------------------");
-
         // Crear instancias de Vista y Controlador
         try {
-            VistaEscenario vista = new VistaEscenario();
-            ControladorVistaEscenario controlador = new ControladorVistaEscenario(vista);
 
-            // Iniciar el juego a través del controlador
-            // El controlador se encargará de cargar o crear Jugador y Escenario
-            controlador.iniciarOContinuarJuego();
 
         } catch (IllegalArgumentException e) {
             System.err.println("Error al inicializar el controlador/vista: " + e.getMessage());

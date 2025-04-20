@@ -63,8 +63,7 @@ public class ObjetoEscenario {
      * 
      * @return Carácter representativo del objeto como cadena.
      */
-    @Override
-    public String toString() {
+    public String printString() {
         return String.valueOf(objetoChar);
     }
 }
