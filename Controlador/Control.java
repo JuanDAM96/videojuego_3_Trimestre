@@ -1,6 +1,7 @@
 package Controlador;
 
 import Modelo.Jugador;
+import javafx.scene.input.KeyCode;
 
 public class Control {
     

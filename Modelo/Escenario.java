@@ -34,7 +34,7 @@ public class Escenario {
      * @param columnas Número de columnas del escenario.
      * @throws IllegalArgumentException Si las dimensiones son menores o iguales a 0.
      */
-    private Escenario(int filas, int columnas) {
+    public Escenario(int filas, int columnas) {
         if (filas <= 0 || columnas <= 0) {
             throw new IllegalArgumentException("Las dimensiones del escenario deben ser positivas.");
         }
