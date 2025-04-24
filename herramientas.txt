@@ -1,5 +1,5 @@
 COMPILAR
-javac -g -d compilados --module-path C:\AQUI_VA_LA_CAPERTA_DONDE_ESTE_JXF\openjfx-24_windows-x64_bin-sdk\javafx-sdk-24\lib --add-modules javafx.fxml,javafx.controls App.java Controlador/*.java Modelo/.java Vista/*.java
+javac -g -d compilados --module-path C:\AQUI_VA_LA_CAPERTA_DONDE_ESTE_JXF\openjfx-24_windows-x64_bin-sdk\javafx-sdk-24\lib --add-modules javafx.fxml,javafx.controls App.java Controlador/*.java Modelo/*.java Vista/*.java
 
 EJECUTAR
 java -classpath compilados --module-path C:\\AQUI_VA_LA_CAPERTA_DONDE_ESTE_JXF\openjfx-24_windows-x64_bin-sdk\javafx-sdk-24\lib --add-modules javafx.fxml,javafx.controls App
