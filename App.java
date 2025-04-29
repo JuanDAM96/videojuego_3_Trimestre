@@ -5,7 +5,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Scanner;
 
-
+import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Group;
+import javafx.scene.Scene;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.paint.Color;
+import javafx.stage.Stage;
 
 /**
  * Clase App
@@ -18,7 +25,7 @@ import java.util.Scanner;
  * @version 0.1.1 (Inicia Controlador con lógica Carga/Guardado)
  * @License GPL-3.0 license || ©2025
  */
-public class App {
+public class App extends Application {
 
     private static final Scanner teclado = new Scanner(System.in);
     private static final String NOMBRE_ARCHIVO_CONFIG = "configuracion.txt";
@@ -30,7 +37,7 @@ public class App {
 
         // Crear instancias de Vista y Controlador
         try {
-
+            pdi(null);
 
         } catch (IllegalArgumentException e) {
             System.err.println("Error al inicializar el controlador/vista: " + e.getMessage());
@@ -40,6 +47,21 @@ public class App {
         } finally {
             System.out.println("\nEl programa ha finalizado su ejecución.");
         }
+    }
+
+
+
+    public static void pdi(Stage PantallaDeIncio) throws IOException {
+        FXMLLoader pdiLoader = new FXMLLoader(App.class.getResource("/Modelo/PantallaDeInicio.fxml"));
+        Scene escena = new Scene(pdiLoader.load(), 32, 332);
+        
+    }
+
+    public void pdj(Stage PantallaDeJuego) throws IOException{
+        FXMLLoader pdjLoader = new FXMLLoader(App.class.getResource("/Modelo/PantallaDeJuego.fxml"));
+        Scene escena = new Scene(pdjLoader.load(), 32, 332);
+
+        
     }
 
     /**
@@ -87,5 +109,13 @@ public class App {
                 }
             }
         }
+    }
+
+
+
+    @Override
+    public void start(Stage arg0) throws Exception {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'start'");
     }
 }
