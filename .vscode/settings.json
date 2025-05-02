@@ -1,0 +1,21 @@
+{
+    "java.jdt.ls.vmargs": "-XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true -Xmx2G -Xms100m -Xlog:disable",
+    "java.project.sourcePaths": [
+        "."
+    ],
+    "java.project.referencedLibraries": [
+        "lib\\sqlite-jdbc-3.49.1.0.jar",
+        "c:\\Users\\T4C30\\Desktop\\Proyectos\\videojuego_3_Trimestre\\lib\\javafx-sdk-24.0.1\\lib\\javafx.media.jar",
+        "c:\\Users\\T4C30\\Desktop\\Proyectos\\videojuego_3_Trimestre\\lib\\javafx-sdk-24.0.1\\lib\\jfx.incubator.richtext.jar",
+        "c:\\Users\\T4C30\\Desktop\\Proyectos\\videojuego_3_Trimestre\\lib\\javafx-sdk-24.0.1\\lib\\javafx.base.jar",
+        "c:\\Users\\T4C30\\Desktop\\Proyectos\\videojuego_3_Trimestre\\lib\\javafx-sdk-24.0.1\\lib\\javafx.web.jar",
+        "c:\\Users\\T4C30\\Desktop\\Proyectos\\videojuego_3_Trimestre\\lib\\javafx-sdk-24.0.1\\lib\\jdk.jsobject.jar",
+        "c:\\Users\\T4C30\\Desktop\\Proyectos\\videojuego_3_Trimestre\\lib\\javafx-sdk-24.0.1\\lib\\jfx.incubator.input.jar",
+        "c:\\Users\\T4C30\\Desktop\\Proyectos\\videojuego_3_Trimestre\\lib\\sqlite-jdbc-3.49.1.0.jar",
+        "c:\\Users\\T4C30\\Desktop\\Proyectos\\videojuego_3_Trimestre\\lib\\javafx-sdk-24.0.1\\lib\\javafx.controls.jar",
+        "c:\\Users\\T4C30\\Desktop\\Proyectos\\videojuego_3_Trimestre\\lib\\javafx-sdk-24.0.1\\lib\\javafx.fxml.jar",
+        "c:\\Users\\T4C30\\Desktop\\Proyectos\\videojuego_3_Trimestre\\lib\\javafx-sdk-24.0.1\\lib\\javafx.swing.jar",
+        "c:\\Users\\T4C30\\Desktop\\Proyectos\\videojuego_3_Trimestre\\lib\\javafx-sdk-24.0.1\\lib\\javafx-swt.jar",
+        "c:\\Users\\T4C30\\Desktop\\Proyectos\\videojuego_3_Trimestre\\lib\\javafx-sdk-24.0.1\\lib\\javafx.graphics.jar"
+    ]
+}

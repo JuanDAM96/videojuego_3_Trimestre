@@ -1,15 +1,25 @@
 package Modelo;
 
+
+
+import java.util.ArrayList;
+import javafx.fxml.FXML;
+import javafx.scene.image.ImageView;
+
+
 /**
  * Representa un objeto dentro del escenario.
  * Cada objeto tiene un carácter representativo y una propiedad de bloqueo.
  */
-public class ObjetoEscenario {
+public class Objeto {
 
+
+    private static ArrayList<ImageView>;
     /** Indica si el objeto bloquea el paso. */
     private boolean bloqueo;
-    /** Carácter que representa al objeto en el escenario. */
-    private char objetoChar;
+
+    @FXML
+    private ImageView rec;
 
     /**
      * Constructor de la clase ObjetoEscenario.
@@ -17,8 +27,8 @@ public class ObjetoEscenario {
      * @param objetoChar Carácter que representa el objeto.
      * @param bloqueo Indica si el objeto bloquea el paso (true) o no (false).
      */
-    public ObjetoEscenario(char objetoChar, boolean bloqueo) {
-        this.objetoChar = objetoChar;
+    public Objeto(ImageView rec, boolean bloqueo) {
+        this.rec = rec;
         this.bloqueo = bloqueo;
     }
 
@@ -40,30 +50,17 @@ public class ObjetoEscenario {
         this.bloqueo = bloqueo;
     }
 
-    /**
-     * Obtiene el carácter que representa el objeto.
-     * 
-     * @return Carácter representativo del objeto.
-     */
-    public char getObjetoChar() {
-        return objetoChar;
+    public ImageView getRec() {
+        return rec;
     }
 
-    /**
-     * Establece el carácter que representa el objeto.
-     * 
-     * @param objetoChar Carácter que representará el objeto en el escenario.
-     */
-    public void setObjetoChar(char objetoChar) {
-        this.objetoChar = objetoChar;
+    public void setRec(ImageView rec) {
+        this.rec = rec;
     }
 
-    /**
-     * Devuelve una representación en cadena del objeto.
-     * 
-     * @return Carácter representativo del objeto como cadena.
-     */
-    public String printString() {
-        return String.valueOf(objetoChar);
+    public static void almacenImagen() {
+        
     }
+
+
 }

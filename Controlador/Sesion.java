@@ -20,7 +20,7 @@ import java.util.regex.Pattern;
 
 import Modelo.Escenario;
 import Modelo.Jugador;
-import Modelo.ObjetoEscenario;
+import Modelo.Objeto;
 
 public class Sesion {
 
@@ -157,7 +157,7 @@ public class Sesion {
         Escenario escenario;
         int filas;
         int columnas;
-        ObjetoEscenario[][] mapa;
+        Objeto[][] mapa;
         List<String> archivo = new ArrayList<>();
         String[] segmentos; 
 

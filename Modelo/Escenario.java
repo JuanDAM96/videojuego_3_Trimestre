@@ -2,15 +2,6 @@
 
 package Modelo;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 /**
  * Clase que representa un escenario en un videojuego.
  * El escenario está compuesto por una matriz de objetos que representan celdas del mapa.
@@ -19,7 +10,7 @@ import java.util.regex.Pattern;
 public class Escenario {
 
     // Atributos
-    private ObjetoEscenario[][] mapa;
+    private Objeto[][] mapa;
     private int filas;
     private int columnas;
 
@@ -40,7 +31,7 @@ public class Escenario {
         }
         this.filas = filas;
         this.columnas = columnas;
-        this.mapa = new ObjetoEscenario[filas][columnas];
+        this.mapa = new Objeto[filas][columnas];
     }
 
     // --- GETTERS ---
@@ -50,7 +41,7 @@ public class Escenario {
      * 
      * @return La matriz de objetos del escenario.
      */
-    public ObjetoEscenario[][] getMapa() {
+    public Objeto[][] getMapa() {
         return mapa;
     }
 
@@ -72,7 +63,7 @@ public class Escenario {
         return columnas;
     }
 
-    public void setMapa(ObjetoEscenario[][] mapa) {
+    public void setMapa(Objeto[][] mapa) {
         this.mapa = mapa;
     }
 

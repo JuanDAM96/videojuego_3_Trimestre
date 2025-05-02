@@ -7,11 +7,7 @@ import java.util.Scanner;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Group;
 import javafx.scene.Scene;
-import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 /**
@@ -32,8 +28,8 @@ public class App extends Application {
     private static final String[] DIRECTORIOS_NECESARIOS = { "escenarios", "jugadores", "partidas" };
 
     public static void main(String[] args) {
-        crearArchivoConfiguracionSiNoExiste();
-        crearDirectoriosSiNoExisten();
+        /* crearArchivoConfiguracionSiNoExiste();
+        crearDirectoriosSiNoExisten(); */
 
         // Crear instancias de Vista y Controlador
         try {
@@ -52,13 +48,13 @@ public class App extends Application {
 
 
     public static void pdi(Stage PantallaDeIncio) throws IOException {
-        FXMLLoader pdiLoader = new FXMLLoader(App.class.getResource("/Modelo/PantallaDeInicio.fxml"));
+        FXMLLoader pdiLoader = new FXMLLoader(App.class.getResource("Escenas/PantallaDeInicio.fxml"));
         Scene escena = new Scene(pdiLoader.load(), 32, 332);
         
     }
 
-    public void pdj(Stage PantallaDeJuego) throws IOException{
-        FXMLLoader pdjLoader = new FXMLLoader(App.class.getResource("/Modelo/PantallaDeJuego.fxml"));
+    public static void pdj(Stage PantallaDeJuego) throws IOException{
+        FXMLLoader pdjLoader = new FXMLLoader(App.class.getResource("Escenas/PantallaDeJuego.fxml"));
         Scene escena = new Scene(pdjLoader.load(), 32, 332);
 
         

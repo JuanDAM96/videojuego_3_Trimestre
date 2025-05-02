@@ -4,6 +4,7 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.TableView;
 import javafx.util.Duration;
 
 public class PantallaDeInicio {
@@ -11,14 +12,18 @@ public class PantallaDeInicio {
     public Button botonIni;
 
     @FXML
-    Timeline tabla = new Timeline(new KeyFrame(Duration.millis(100), e -> {
-        tabla();
-    }));
+    public static void cambio(){
+        botonIni.setOnAction(e ->{
+            App.pdj(PantallaDeJuego);
+        })
+    }
+
+    @FXML
+    TableView tabla;
     
-/*     bucle.setCycleCount(Timeline.INDEFINITE); // Repetir infinitamente
-    bucle.play(); */
-    
-    
-    public static void tabla() {} // TODO Hacer la tabla cuando pasemos a SQLite
+    @FXML
+    public static void tabla() {
+        // TODO Hacer un resultset para cambiar los datos cuando el jugador cambie a las pantalla de inicio
+    } // TODO Hacer la tabla cuando pasemos a SQLite
 
 }

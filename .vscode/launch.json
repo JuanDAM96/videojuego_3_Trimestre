@@ -1,0 +1,25 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        
+        {
+            "type": "java",
+            "name": "App",
+            "request": "launch",
+            "mainClass": "App",
+            "projectName": "videojuego_3_Trimestre_2ccf9b95",
+            "vmArgs": [
+                "--module-path",
+                "C:/Java/javafx-sdk-24/lib",
+                "--add-modules",
+                "javafx.fxml,javafx.controls,javafx.graphics,javafx.media,javafx.base,javafx.swing"
+            ],
+            "classpath": [
+                "C:/Java/javafx-sdk-24/lib/*",
+                "C:/Java/javafx-sdk-24/lib/src.zip",
+                "videojuego_3_Trimestre",
+                "lib/*"
+            ]
+        }
+    ]
+  }
