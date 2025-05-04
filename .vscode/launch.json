@@ -1,7 +1,13 @@
 {
     "version": "0.2.0",
     "configurations": [
-        
+        {
+            "type": "java",
+            "name": "App",
+            "request": "launch",
+            "mainClass": "com.videojuego.App",
+            "projectName": "videojuego_3_Trimestre_2ccf9b95"
+        },
         {
             "type": "java",
             "name": "App",

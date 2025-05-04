@@ -1,121 +1,85 @@
 package Modelo;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
+import java.util.Objects; // Importar para equals y hashCode
 
 /**
- * Clase Jugador
- *
- * Representa al jugador dentro del juego. Guarda/Carga datos en formato binario
- * (.bin). Incluye la posición del jugador en el escenario.
- * 
- * @author Santiago
- * @author Juan
- * @version 0.2.0 (Guardado Binario y Posición)
- * @license GPL-3.0 license || ©2025
+ * Representa al jugador, incluyendo su identidad y estado en el juego.
+ * Implementa Serializable para poder guardarlo en archivos binarios.
  */
-public class Jugador{
+public class Jugador implements Serializable {
+    // Necesario para la serialización, cámbialo si modificas campos incompatibles
+    private static final long serialVersionUID = 1L;
 
-    private static String nombre;
-    private static String correo;
-    private static int fila; // Posición actual del jugador
-    private static int columna; // Posición actual del jugador
+    // --- Identidad del Jugador (guardado en /jugadores) ---
+    private String nombre;
+    private String email; // Opcional, según requerimiento
 
-    /**
-     * Constructor parametrizado
-     *
-     * @param nombre         Nombre del jugador.
-     * @param correo         Correo del jugador.
-     * @param filaInicial    Fila inicial del jugador.
-     * @param columnaInicial Columna inicial del jugador.
-     * @throws IllegalArgumentException Si el nombre o el correo están vacíos.
-     */
-    public Jugador(String nombre, String correo) {
-        if (nombre == null || nombre.trim().isEmpty()) {
-            throw new IllegalArgumentException("El nombre del jugador no puede estar vacío.");
-        }
-        if (correo == null || correo.trim().isEmpty()) {
-            throw new IllegalArgumentException("El correo del jugador no puede estar vacío.");
-        }
-        this.nombre = nombre.trim();
-        this.correo = correo.trim();
+    // --- Estado en la Partida (guardado en /partidas) ---
+    private int filaActual;
+    private int columnaActual;
+    private int puntos;
+    // Podrías añadir más estado: nivelActual, inventario, etc.
+
+    // Constructor para nuevo jugador (requiere nombre y email)
+    public Jugador(String nombre, String email) {
+        this.nombre = nombre;
+        this.email = email;
+        // Valores iniciales por defecto para una nueva partida
+        this.filaActual = 1; // Posición inicial por defecto (ajustar)
+        this.columnaActual = 1; // Posición inicial por defecto (ajustar)
+        this.puntos = 0;
     }
 
-    // --- GETTERS ---
-
-    public static void setFila(int fila) {
-        Jugador.fila = fila;
+    // Constructor completo (útil para cargar desde archivo)
+    public Jugador(String nombre, String email, int fila, int columna, int puntos) {
+        this.nombre = nombre;
+        this.email = email;
+        this.filaActual = fila;
+        this.columnaActual = columna;
+        this.puntos = puntos;
     }
 
-    public static void setColumna(int columna) {
-        Jugador.columna = columna;
+    // --- Getters ---
+    public String getNombre() { return nombre; }
+    public String getEmail() { return email; }
+    public int getFilaActual() { return filaActual; }
+    public int getColumnaActual() { return columnaActual; }
+    public int getPuntos() { return puntos; }
+
+    // --- Setters (para estado de partida) ---
+    public void setFilaActual(int fila) { this.filaActual = fila; }
+    public void setColumnaActual(int columna) { this.columnaActual = columna; }
+    public void setPuntos(int puntos) { this.puntos = puntos; }
+    public void addPuntos(int cantidad) { this.puntos += cantidad; } // Método útil
+
+    // --- Setters (para identidad - usualmente no se cambian después de crear) ---
+    // public void setNombre(String nombre) { this.nombre = nombre; }
+    // public void setEmail(String email) { this.email = email; }
+
+
+    // --- equals y hashCode basados en el nombre (identificador único) ---
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Jugador jugador = (Jugador) o;
+        return Objects.equals(nombre, jugador.nombre);
     }
 
-    /**
-     * Obtiene el nombre del jugador.
-     * 
-     * @return El nombre del jugador.
-     */
-    public static String getNombre() {
-        return nombre;
+    @Override
+    public int hashCode() {
+        return Objects.hash(nombre);
     }
 
-    /**
-     * Obtiene el correo del jugador.
-     * 
-     * @return El correo del jugador.
-     */
-    public static String getCorreo() {
-        return correo;
+    @Override
+    public String toString() {
+        return "Jugador{" +
+               "nombre='" + nombre + '\'' +
+               ", email='" + email + '\'' +
+               ", filaActual=" + filaActual +
+               ", columnaActual=" + columnaActual +
+               ", puntos=" + puntos +
+               '}';
     }
-
-    /**
-     * Obtiene la fila actual del jugador.
-     * 
-     * @return La fila actual del jugador.
-     */
-    public static int getFila() {
-        return fila;
-    }
-
-    /**
-     * Obtiene la columna actual del jugador.
-     * 
-     * @return La columna actual del jugador.
-     */
-    public static int getColumna() {
-        return columna;
-    }
-
-    // --- SETTERS ---
-
-    /**
-     * Establece la posición del jugador en el escenario.
-     * 
-     * @param fila    Nueva fila del jugador.
-     * @param columna Nueva columna del jugador.
-     */
-    public void setPosicion(int fila, int columna) {
-        this.fila = fila;
-        this.columna = columna;
-    }
-
-    public static void setNombre(String nombre) {
-        Jugador.nombre = nombre;
-    }
-
-    public static void setCorreo(String correo) {
-        Jugador.correo = correo;
-    }
-
-
-
 }

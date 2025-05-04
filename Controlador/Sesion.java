@@ -1,345 +1,233 @@
 package Controlador;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
+import Modelo.Escenario;
+import Modelo.Jugador;
+import java.io.*;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import Modelo.Escenario;
-import Modelo.Jugador;
-import Modelo.Objeto;
-
+/**
+ * Gestiona la carga y guardado de datos del juego (Escenarios, Jugadores, Partidas).
+ */
 public class Sesion {
 
-    /**
-     * Maneja el inicio de sesión del jugador: Carga un jugador existente o crea uno
-     * nuevo.
-     * 
-     * @param nombreUsuario El nombre de usuario (usado como nombre de archivo).
-     * @return El objeto Jugador cargado o recién creado.
-     */
-    public static Jugador sesionJug(String nombreUsuario) {
-        Path ruta = Paths.get("./Jugadores" + nombreUsuario.toLowerCase() + ".bin");
-        Jugador jugador = null; // Inicializar a null
-
-        if (Files.exists(ruta)) {
-            jugador = Sesion.cargaJug(ruta); // Carga el jugador existente
-        } else {
-            System.out.println("Creando nuevo jugador: " + nombreUsuario);
-            jugador = Sesion.creaJug(ruta, nombreUsuario); // Crea un nuevo jugador
-        }
-        Jugador.setNombre(jugador.getNombre());
-        Jugador.setCorreo(jugador.getCorreo());
-
-        return jugador;
-    }
+    private static final String DIRECTORIO_ESCENARIOS = "escenarios";
+    private static final String DIRECTORIO_JUGADORES = "jugadores";
+    private static final String DIRECTORIO_PARTIDAS = "partidas"; // Para guardar estado de juego
 
     /**
-     * Crea un nuevo jugador, obtiene sus detalles y los guarda en un archivo.
-     * 
-     * @param ruta          La ruta del archivo para guardar los datos del jugador.
-     * @param nombreUsuario El nombre de usuario para el nuevo jugador.
-     * @return El objeto Jugador recién creado, o null si la creación falla.
+     * Carga un escenario desde un archivo de texto con formato específico.
+     * Formato esperado:
+     * Linea 1: FilasXColumnas (ej. "30X30")
+     * Lineas siguientes: Descripción de tiles por fila (ej. "10E 5O 15E")
+     * @param rutaArchivo Ruta completa al archivo del escenario.
+     * @return Un objeto Escenario, o null si hay error.
      */
-    public static Jugador creaJug(Path ruta, String nombreUsuario) {
+    public static Escenario cargarEscenario(String rutaArchivo) {
+        List<String> lineasMapa = new ArrayList<>();
+        int filas = 0;
+        int columnas = 0;
 
-        Scanner teclado = new Scanner(System.in); // Usa Scanner para leer la entrada del usuario
-        System.out.print("Introduce el correo electrónico para " + nombreUsuario + ": ");
-        String correo = teclado.nextLine();
+        try (BufferedReader lector = new BufferedReader(new FileReader(rutaArchivo))) {
+            // Leer dimensiones
+            String primeraLinea = lector.readLine();
+            if (primeraLinea == null || !primeraLinea.matches("\\d+X\\d+")) {
+                System.err.println("Error: Formato incorrecto de dimensiones en la primera línea de " + rutaArchivo);
+                return null;
+            }
+            String[] dims = primeraLinea.split("X");
+            filas = Integer.parseInt(dims[0]);
+            columnas = Integer.parseInt(dims[1]);
 
-        Jugador nuevoJugador = new Jugador(nombreUsuario, correo); // Constructor de ejemplo
+            if (filas <= 0 || columnas <= 0) {
+                 System.err.println("Error: Dimensiones inválidas en " + rutaArchivo);
+                 return null;
+            }
 
-        // Try-with-resources para cerrar automáticamente el stream
-        try (OutputStream fos = Files.newOutputStream(ruta);
-                ObjectOutputStream oos = new ObjectOutputStream(fos)) {
+            // Leer y decodificar el resto de líneas (RLE: Run-Length Encoding)
+            String lineaRLE;
+            Pattern pattern = Pattern.compile("(\\d+)([EO])"); // Patrón para "10E", "5O", etc.
 
-            // Serializa y escribe el objeto Jugador en el archivo
-            oos.writeObject(nuevoJugador);
-            System.out.println("Jugador '" + nombreUsuario + "' guardado correctamente en " + ruta.toString());
-            return nuevoJugador;
+            for (int i = 0; i < filas; i++) {
+                lineaRLE = lector.readLine();
+                if (lineaRLE == null) {
+                    System.err.println("Error: Faltan líneas en el archivo de escenario: " + rutaArchivo);
+                    return null; // Faltan filas
+                }
+
+                StringBuilder filaDecodificada = new StringBuilder(columnas);
+                Matcher matcher = pattern.matcher(lineaRLE.trim());
+                int colActual = 0;
+                while (matcher.find()) {
+                    int cantidad = Integer.parseInt(matcher.group(1));
+                    char tipo = matcher.group(2).charAt(0); // 'E' o 'O'
+                    for (int k = 0; k < cantidad && colActual < columnas; k++) {
+                        filaDecodificada.append(tipo);
+                        colActual++;
+                    }
+                }
+
+                // Verificar si la fila decodificada tiene la longitud correcta
+                if (filaDecodificada.length() != columnas) {
+                     System.err.println("Error: La fila " + (i+1) + " decodificada no coincide con el ancho (" + columnas + ") en " + rutaArchivo);
+                     System.err.println("Línea RLE: " + lineaRLE);
+                     System.err.println("Decodificada ("+filaDecodificada.length()+"): " + filaDecodificada);
+                     // Rellenar con espacios si es más corta (o manejar como error)
+                     while(filaDecodificada.length() < columnas) {
+                         filaDecodificada.append('E'); // Asumir espacio por defecto
+                     }
+                     // Truncar si es más larga
+                     if (filaDecodificada.length() > columnas) {
+                         filaDecodificada.setLength(columnas);
+                     }
+                     // return null; // Opcional: ser estricto con el formato
+                }
+                lineasMapa.add(filaDecodificada.toString());
+            }
+
+            // Crear el escenario con las filas decodificadas
+            System.out.println("Escenario cargado desde: " + rutaArchivo + " (" + filas + "x" + columnas + ")");
+            // Usar el constructor que convierte List<String> a char[][]
+            return new Escenario(filas, columnas, lineasMapa);
 
         } catch (IOException e) {
-            System.err.println("Error al crear o guardar el jugador '" + nombreUsuario + "': " + e.getMessage());
-            e.printStackTrace(); // Imprime el stack trace para depuración
-            return null; // Devuelve null indicando fallo
+            System.err.println("Error de E/S al cargar el escenario: " + e.getMessage());
+            return null;
+        } catch (NumberFormatException e) {
+             System.err.println("Error al parsear números en el archivo de escenario: " + e.getMessage());
+             return null;
+        } catch (Exception e) { // Captura genérica para otros errores inesperados
+            System.err.println("Error inesperado al cargar el escenario: " + e.getMessage());
+            e.printStackTrace();
+            return null;
         }
     }
 
     /**
-     * Carga los datos del jugador desde un archivo especificado.
-     * 
-     * @param ruta La ruta del archivo desde donde cargar los datos del jugador.
-     * @return El objeto Jugador cargado, o null si la carga falla.
+     * Guarda los datos de identidad de un jugador (nombre, email) en un archivo binario.
+     * El archivo se guarda en la carpeta "jugadores" con el nombre del jugador.
+     * @param jugador El objeto Jugador a guardar.
+     * @return true si se guardó correctamente, false en caso contrario.
      */
-    public static Jugador cargaJug(Path ruta) {
-        // Comprueba si el archivo existe realmente antes de intentar cargarlo
-        if (!Files.exists(ruta)) {
-            System.err.println("Error: El archivo del jugador no existe en " + ruta.toString());
-            return null;
+    public static boolean guardarJugador(Jugador jugador) {
+        if (jugador == null || jugador.getNombre() == null || jugador.getNombre().trim().isEmpty()) {
+            System.err.println("Error: No se puede guardar un jugador nulo o sin nombre.");
+            return false;
         }
-
-        // Try-with-resources para cerrar automáticamente el stream
-        try (InputStream fis = Files.newInputStream(ruta);
-                ObjectInputStream ois = new ObjectInputStream(fis)) {
-
-            // Lee el objeto serializado y lo castea a Jugador
-            Object obj = ois.readObject();
-            if (obj instanceof Jugador) {
-                System.out.println("Jugador cargado correctamente desde " + ruta.toString());
-                return (Jugador) obj;
-            } else {
-                System.err.println("Error: El archivo no contiene un objeto Jugador válido.");
-                return null;
-            }
-
+        // Crear el directorio si no existe
+        try {
+            Files.createDirectories(Paths.get(DIRECTORIO_JUGADORES));
         } catch (IOException e) {
-            System.err.println("Error de E/S al cargar el jugador desde " + ruta.toString() + ": " + e.getMessage());
-            e.printStackTrace();
-            return null;
-        } catch (ClassNotFoundException e) {
-            System.err.println(
-                    "Error: La clase Jugador no se encontró durante la deserialización. Asegúrate de que esté en el classpath y sea Serializable.");
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    /**
-     * Maneja la selección y carga del escenario.
-     * 
-     * @return El objeto Escenario cargado, o null si la selección/carga falla.
-     */
-    public static Escenario sesionEsc(String arch) {
-        Escenario escenario = null;
-
-        // Construye la ruta completa al archivo .txt
-        Path ruta = Paths.get("./Escenarios" + arch.toLowerCase() + ".txt"); // Añade extensión y convierte a minúsculas
-
-        // Comprueba si el archivo existe antes de intentar cargarlo
-        if (Files.exists(ruta)) {
-            System.out.println("Cargando escenario desde: " + ruta.toString());
-            escenario = Sesion.cargaEsc(ruta); // Llama a la función que carga y procesa el archivo
-            if (escenario == null) {
-                System.err.println("No se pudo cargar el escenario desde: " + ruta);
-            } else {
-                System.out.println("Escenario '" + arch + "' cargado correctamente.");
-            }
-        } else {
-            System.err.println("Error: El archivo del escenario '" + ruta.getFileName() + "' no existe en Escenarios");
+             System.err.println("Error al crear el directorio de jugadores: " + e.getMessage());
+             return false;
         }
 
-        // Considera añadir un bucle o comportamiento por defecto si la carga falla
-        return escenario;
-    }
-
-    /**
-     * Carga los datos del escenario desde un archivo de texto especificado.
-     * El formato del archivo de texto determina cómo se interpreta.
-     * 
-     * @param ruta La ruta al archivo de texto del escenario.
-     * @return El objeto Escenario cargado, o null si la carga falla.
-     * @throws IOException 
-     */
-    public static Escenario cargaEsc(Path ruta) throws IOException {
-        Escenario escenario;
-        int filas;
-        int columnas;
-        Objeto[][] mapa;
-        List<String> archivo = new ArrayList<>();
-        String[] segmentos; 
-
-        // Constantes para los tipos de tile (puedes usar las de Escenario si son
-        // públicas)
-        final char ESPACIO_VACIO = Escenario.getEspacioVacio(); // Espacio vacío
-        final char OBJETO_BLOQUEANTE = Escenario.getObjetoBloqueante(); // Objeto bloqueante
-
-
-        // Leer fichero
-        archivo = Files.readAllLines(ruta);
-        for (int i = 0; i < archivo.size(); i++) {
-            if (i == 0) {
-                String[] dimensiones = archivo.get(0).split("X");
-        
-                filas = Integer.parseInt(dimensiones[0].trim());
-                columnas = Integer.parseInt(dimensiones[1].trim());
-                escenario = new Escenario(filas, columnas); 
-            }else{
-                String linea = archivo.get(i).trim();
-                segmentos = linea.split("\\s+");
-            }
-
-            // insertar objeto
-            for (int x = 0; x < filas; x++) {
-                for (String segmento : segmentos) {
-                    // Extraer cantidad y tipo
-                    int cantidad = Integer.parseInt(segmento.substring(0, segmento.length() - 1));
-                    char tipo = segmento.charAt(segmento.length() - 1);
-                    // Llenar el mapa con los objetos correspondientes
-                    for (int j = 0; j < columnas; j++) {
-                        for (int k ; cantidad < cantidad+columnas; cantidad++) {
-                            if (tipo == 'O') {
-                                //TODO @JuanDAM96 mapa[x][j] = ;
-                            } else {
-                                //TODO @JuanDAM96 mapa[x][j] = ;
-                            }
-                        }
-            
-                    }
-                }
-            }
-
-
-        }
-
-        escenario.setMapa(mapa);
-        return escenario;
-
-/*         // Expresión regular para parsear segmentos como "20O", "39E"
-        // Captura: Grupo 1 -> número (\d+), Grupo 2 -> tipo ([EO])
-        final Pattern PATRON_SEGMENTO = Pattern.compile("(\\d+)([EO])");
-
-        try (BufferedReader reader = Files.newBufferedReader(ruta, StandardCharsets.UTF_8)) {
-
-            // 1. Leer y parsear la línea de dimensiones
-            String lineaDimensiones = reader.readLine();
-            if (lineaDimensiones == null || lineaDimensiones.trim().isEmpty()) {
-                System.err.println("Error: Archivo vacío o sin línea de dimensiones en " + ruta);
-                return null;
-            }
-
-            String[] partesDimension = lineaDimensiones.trim().split("X", 2);
-            if (partesDimension.length != 2) {
-                System.err.println("Error: Formato de dimensiones inválido en " + ruta
-                        + ". Se esperaba 'filasXcolumnas', se encontró: " + lineaDimensiones);
-                return null;
-            }
-
-            int filas;
-            int columnas;
-            try {
-                filas = Integer.parseInt(partesDimension[0]);
-                columnas = Integer.parseInt(partesDimension[1]);
-                if (filas <= 0 || columnas <= 0) {
-                    throw new NumberFormatException("Las dimensiones deben ser números positivos.");
-                }
-            } catch (NumberFormatException e) {
-                System.err.println(
-                        "Error: Dimensiones inválidas en " + ruta + ": " + lineaDimensiones + " - " + e.getMessage());
-                return null;
-            }
-
-            // 2. Preparar la estructura del mapa
-            ObjetoEscenario[][] mapa = new ObjetoEscenario[filas][columnas];
-
-            // 3. Leer y procesar las líneas de datos de las filas
-            String lineaDatosFila;
-            int filaActual = 0;
-            while ((lineaDatosFila = reader.readLine()) != null && filaActual < filas) {
-                lineaDatosFila = lineaDatosFila.trim();
-                if (lineaDatosFila.isEmpty()) {
-                    // Podrías decidir si ignorar líneas vacías o considerarlo un error
-                    System.err.println("Advertencia: Línea vacía encontrada en " + ruta + " en la fila de datos "
-                            + (filaActual + 1));
-                    continue; // Opcional: Saltar líneas vacías entre datos de filas
-                    // return null; // Opcional: Considerar línea vacía como error
-                }
-
-                int columnaActual = 0;
-                // Dividir la línea por espacios (uno o más)
-                String[] segmentos = lineaDatosFila.split("\\s+");
-
-                for (String segmento : segmentos) {
-                    if (segmento.isEmpty())
-                        continue; // Ignorar posibles espacios dobles
-
-                    Matcher matcher = PATRON_SEGMENTO.matcher(segmento);
-                    if (!matcher.matches()) {
-                        System.err.println("Error: Formato de segmento inválido en " + ruta + ", fila "
-                                + (filaActual + 1) + ", segmento: '" + segmento + "'");
-                        return null; // Error en el formato de un segmento
-                    }
-
-                    int cantidad = Integer.parseInt(matcher.group(1)); // Ya validado por regex como número
-                    char tipo = matcher.group(2).charAt(0); // Ya validado por regex como 'E' o 'O'
-
-                    // Verificar si el segmento cabe en la fila actual
-                    if (columnaActual + cantidad > columnas) {
-                        System.err.println("Error: Los datos de la fila " + (filaActual + 1)
-                                + " exceden el número de columnas (" + columnas + ") definido en " + ruta);
-                        return null;
-                    }
-
-                    // Crear los objetos correspondientes en el mapa
-                    boolean esBloqueante = (tipo == OBJETO_BLOQUEANTE);
-                    for (int i = 0; i < cantidad; i++) {
-                        mapa[filaActual][columnaActual] = new ObjetoEscenario(tipo, esBloqueante);
-                        columnaActual++;
-                    }
-                } // Fin del bucle de segmentos
-
-                // Verificar si se llenó exactamente la fila
-                if (columnaActual != columnas) {
-                    System.err.println("Error: Los datos de la fila " + (filaActual + 1)
-                            + " no completan el número de columnas (" + columnas + ") definido en " + ruta
-                            + ". Se procesaron " + columnaActual + " tiles.");
-                    return null;
-                }
-
-                filaActual++; // Pasar a la siguiente fila
-            } // Fin del bucle de lectura de líneas
-
-            // 4. Verificar si se leyeron todas las filas esperadas
-            if (filaActual != filas) {
-                System.err.println("Error: Número incorrecto de filas de datos en " + ruta + ". Se esperaban " + filas
-                        + ", se encontraron " + filaActual);
-                return null;
-            }
-
-            // 5. Crear y devolver el objeto Escenario
-            // **NECESITARÁS AJUSTAR ESTA PARTE SEGÚN LA OPCIÓN ELEGIDA PARA LA CLASE
-            // Escenario**
-
-            // Ejemplo usando Opción A (Método Factory Estático en Escenario)
-            // return Escenario.crearDesdeDatos(filas, columnas, mapa);
-
-            // Ejemplo usando Opción B (Constructor público/package-private y setter)
-            try {
-                Escenario escenario = new Escenario(filas, columnas); // Asume constructor accesible
-                // escenario.setMapa(mapa); // Asume método setter accesible
-                // Necesitas implementar el método setMapa o similar en Escenario.java
-                System.err.println(
-                        "ADVERTENCIA: El mapa leído necesita ser asignado al objeto Escenario. Implementa un constructor o setter adecuado en Escenario.java.");
-                // Temporalmente devolvemos un escenario sin mapa asignado para demostrar la
-                // lectura.
-                // ¡ESTO DEBE SER CORREGIDO EN LA CLASE Escenario!
-                return escenario; // Devuelve el escenario con dimensiones, pero sin mapa interno poblado.
-            } catch (Exception e) {
-                System.err.println("Error: No se pudo instanciar Escenario. ¿Es accesible el constructor?");
-                return null;
-            }
-
+        String nombreArchivo = Paths.get(DIRECTORIO_JUGADORES, jugador.getNombre() + ".dat").toString();
+        try (ObjectOutputStream salida = new ObjectOutputStream(new FileOutputStream(nombreArchivo))) {
+             // Guardamos solo los datos de identidad (o el objeto entero si es más simple)
+             // Para guardar solo nombre/email, podrías crear un objeto específico o escribir los Strings.
+             // Guardando el objeto entero es más fácil si Jugador es Serializable.
+            salida.writeObject(jugador);
+            System.out.println("Datos del jugador guardados en: " + nombreArchivo);
+            return true;
         } catch (IOException e) {
-            System.err.println("Error de E/S al leer el archivo de escenario " + ruta + ": " + e.getMessage());
+            System.err.println("Error al guardar los datos del jugador '" + jugador.getNombre() + "': " + e.getMessage());
             e.printStackTrace();
-            return null;
-        } catch (Exception e) { // Captura otros errores inesperados (ej. OutOfMemoryError)
-            System.err.println("Error inesperado al procesar el archivo de escenario " + ruta + ": " + e.getMessage());
-            e.printStackTrace();
-            return null;
-        } */
+            return false;
+        }
     }
 
+     /**
+     * Carga los datos de identidad de un jugador desde un archivo binario.
+     * Busca el archivo en la carpeta "jugadores".
+     * @param nombre El nombre del jugador a cargar.
+     * @return El objeto Jugador cargado, o null si no se encuentra o hay un error.
+     */
+    public static Jugador cargarJugadorPorNombre(String nombre) {
+         if (nombre == null || nombre.trim().isEmpty()) {
+            return null;
+        }
+        String nombreArchivo = Paths.get(DIRECTORIO_JUGADORES, nombre + ".dat").toString();
+        File archivo = new File(nombreArchivo);
+
+        if (!archivo.exists()) {
+            System.out.println("No se encontró archivo para el jugador: " + nombre);
+            return null;
+        }
+
+        try (ObjectInputStream entrada = new ObjectInputStream(new FileInputStream(archivo))) {
+            Jugador jugadorCargado = (Jugador) entrada.readObject();
+            System.out.println("Datos del jugador '" + nombre + "' cargados desde: " + nombreArchivo);
+            return jugadorCargado;
+        } catch (IOException | ClassNotFoundException | ClassCastException e) {
+            System.err.println("Error al cargar los datos del jugador '" + nombre + "': " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+
+    // --- Métodos para guardar/cargar estado de la partida (opcional) ---
+
+    /**
+     * Guarda el estado actual de una partida (incluyendo jugador y escenario actual).
+     * @param jugador El jugador con su estado actual.
+     * @param escenario El escenario actual (puede ser solo la ruta o el objeto entero si es serializable).
+     * @param nombrePartida Nombre para el archivo de guardado.
+     */
+    public static void guardarPartidaActual(Jugador jugador, Escenario escenario, String nombrePartida) {
+         // Crear el directorio si no existe
+        try {
+            Files.createDirectories(Paths.get(DIRECTORIO_PARTIDAS));
+        } catch (IOException e) {
+             System.err.println("Error al crear el directorio de partidas: " + e.getMessage());
+             return;
+        }
+
+        String rutaArchivo = Paths.get(DIRECTORIO_PARTIDAS, nombrePartida + ".sav").toString();
+        try (ObjectOutputStream salida = new ObjectOutputStream(new FileOutputStream(rutaArchivo))) {
+            salida.writeObject(jugador);
+            // Si Escenario es Serializable, puedes guardarlo también:
+            // salida.writeObject(escenario);
+            // Si no, guarda la ruta al archivo del escenario:
+            // salida.writeUTF(rutaAlArchivoDelEscenarioActual);
+            System.out.println("Partida guardada en: " + rutaArchivo);
+        } catch (IOException e) {
+            System.err.println("Error al guardar la partida: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Carga el estado de una partida guardada.
+     * @param nombrePartida Nombre del archivo de guardado.
+     * @return Un objeto Jugador con el estado cargado, o null si hay error.
+     * (Podría devolver un objeto más complejo si guardas más cosas).
+     */
+     public static Jugador cargarPartidaActual(String nombrePartida) {
+         String rutaArchivo = Paths.get(DIRECTORIO_PARTIDAS, nombrePartida + ".sav").toString();
+         File archivo = new File(rutaArchivo);
+
+         if (!archivo.exists()) {
+             System.out.println("No se encontró archivo de partida guardada: " + nombrePartida);
+             return null;
+         }
+
+         try (ObjectInputStream entrada = new ObjectInputStream(new FileInputStream(archivo))) {
+             Jugador jugadorCargado = (Jugador) entrada.readObject();
+             // Si guardaste más cosas, cárgalas aquí:
+             // Escenario escenarioCargado = (Escenario) entrada.readObject();
+             // String rutaEscenario = entrada.readUTF();
+             System.out.println("Partida cargada desde: " + rutaArchivo);
+             return jugadorCargado; // Devuelve solo el jugador por ahora
+         } catch (IOException | ClassNotFoundException | ClassCastException e) {
+             System.err.println("Error al cargar la partida '" + nombrePartida + "': " + e.getMessage());
+             e.printStackTrace();
+             return null;
+         }
+     }
 }
