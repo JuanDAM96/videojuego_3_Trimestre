@@ -1,51 +1,76 @@
-package Controlador;
+package Controlador; // Debe estar en el paquete Controlador
 
+// --- IMPORTS NECESARIOS ---
+import Modelo.Escenario;
 import Modelo.Jugador;
 import javafx.scene.input.KeyCode;
+import java.util.HashSet; // Importar HashSet
+import java.util.Set;
+// --- FIN IMPORTS ---
 
 public class Control {
-    
-    // Conjunto de teclas presionadas (ejemplo: W, S, A, D)
-    private static final java.util.Set<KeyCode> teclasPresionadas = new java.util.HashSet<>();
 
-    // Método para manejar el movimiento del jugador
-    public static void mov() {
-        int cambioFila = 0;   // Cambio en la fila (eje Y)
-        int cambioColumna = 0; // Cambio en la columna (eje X)
+    private static final Set<KeyCode> teclasPresionadas = new HashSet<>();
 
-        // Verificar qué teclas están presionadas y ajustar el movimiento
-        if (teclasPresionadas.contains(KeyCode.W)) {
-            cambioFila = -1; // Moverse hacia arriba
-        }
-        if (teclasPresionadas.contains(KeyCode.S)) {
-            cambioFila = 1;  // Moverse hacia abajo
-        }
-        if (teclasPresionadas.contains(KeyCode.A)) {
-            cambioColumna = -1; // Moverse hacia la izquierda
-        }
-        if (teclasPresionadas.contains(KeyCode.D)) {
-            cambioColumna = 1;  // Moverse hacia la derecha
+    /**
+     * Intenta mover al jugador basado en las teclas presionadas y valida colisiones.
+     * @param jugador La instancia del jugador a mover.
+     * @param escenario La instancia del escenario actual.
+     * @return true si el jugador se movió, false si no hubo movimiento o hubo colisión.
+     */
+    // --- ASEGÚRATE QUE LA FIRMA SEA EXACTAMENTE ESTA ---
+    public static boolean mov(Jugador jugador, Escenario escenario) {
+        if (jugador == null || escenario == null) {
+            System.err.println("Error en Control.mov: Jugador o Escenario es null.");
+            return false;
         }
 
-        // Calcular nueva posición
-        int nuevaFila = Jugador.getFilaActual() + cambioFila;
-        int nuevaColumna = Jugador.getColumnaActual() + cambioColumna;
+        int cambioFila = 0;
+        int cambioColumna = 0;
 
-        // Validar que la nueva posición esté dentro del rango del mapa
-        if (nuevaFila >= 0 && nuevaFila < Escenario.getFilas() && 
-            nuevaColumna >= 0 && nuevaColumna < Escenario.getColumnas()) {
-            Jugador.setFilaActual(nuevaFila);
-            Jugador.setColumnaActual(nuevaColumna);
+        if (teclasPresionadas.contains(KeyCode.W)) cambioFila = -1;
+        if (teclasPresionadas.contains(KeyCode.S)) cambioFila = 1;
+        if (teclasPresionadas.contains(KeyCode.A)) cambioColumna = -1;
+        if (teclasPresionadas.contains(KeyCode.D)) cambioColumna = 1;
+
+        if (cambioFila == 0 && cambioColumna == 0) {
+            return false; // No hay movimiento
         }
+
+        int nuevaFila = jugador.getFilaActual() + cambioFila;
+        int nuevaColumna = jugador.getColumnaActual() + cambioColumna;
+
+        // Validar límites
+        if (nuevaFila < 0 || nuevaFila >= escenario.getFilas() ||
+            nuevaColumna < 0 || nuevaColumna >= escenario.getColumnas()) {
+            return false;
+        }
+
+        // Validar colisión (asumiendo 'O' es obstáculo)
+        char tileDestino = escenario.getTile(nuevaFila, nuevaColumna);
+        if (tileDestino == 'O') {
+             return false;
+        }
+
+        // Movimiento válido
+        jugador.setFilaActual(nuevaFila);
+        jugador.setColumnaActual(nuevaColumna);
+        return true;
     }
 
-    // Método para agregar una tecla presionada
     public static void agregarTecla(KeyCode tecla) {
         teclasPresionadas.add(tecla);
     }
 
-    // Método para eliminar una tecla presionada
     public static void eliminarTecla(KeyCode tecla) {
         teclasPresionadas.remove(tecla);
+    }
+
+    /**
+     * Limpia el conjunto de teclas presionadas actualmente.
+     */
+     // --- ASEGÚRATE QUE ESTE MÉTODO EXISTA Y SEA ASÍ ---
+    public static void limpiarTeclas() {
+        teclasPresionadas.clear();
     }
 }

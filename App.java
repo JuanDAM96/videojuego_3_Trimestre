@@ -1,5 +1,5 @@
-
-
+// --- SIN "package com.videojuego;" ---
+// Esta clase está en el paquete por defecto
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -10,17 +10,23 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.stage.Stage;
 import java.io.IOException;
-import java.net.URL; // Importar URL
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 
-// Importa tus clases necesarias
+// --- IMPORTS NECESARIOS para clases en otros paquetes ---
 import Controlador.SQLite;
-import Controlador.Sesion;
+import Controlador.Sesion; // <<<--- IMPORT AÑADIDO/VERIFICADO
+import Controlador.Control;
+import Controlador.TileManager;
 import Modelo.Jugador;
-import Modelo.Puntuacion; // Asegúrate de tener esta clase si la usas en otra parte
+import Modelo.Puntuacion;
+import Modelo.Escenario;
+// Ya no se importan PantallaDeJuego ni RegistroJugadorController porque están en el mismo paquete (default)
+// --- FIN IMPORTS ---
+
 
 public class App extends Application {
 
@@ -37,14 +43,21 @@ public class App extends Application {
     @Override
     public void init() throws Exception {
         super.init();
+        System.out.println("Ejecutando App.init()...");
         crearDirectoriosSiNoExisten();
         SQLite.inicializarBaseDatos();
+        // Ahora Sesion.crearEscenarioPorDefectoSiNoExiste() debería ser encontrado
+        Sesion.crearEscenarioPorDefectoSiNoExiste();
+        System.out.println("App.init() completado.");
     }
+
+    // ... (El resto de la clase App sin cambios respecto a la versión anterior) ...
 
     @Override
     public void start(Stage stage) {
         primaryStage = stage;
         primaryStage.setTitle("Videojuego");
+        System.out.println("Ejecutando App.start()...");
 
         TextInputDialog dialogoNombre = new TextInputDialog();
         dialogoNombre.setTitle("Inicio de Sesión");
@@ -56,19 +69,18 @@ public class App extends Application {
         if (resultado.isPresent() && !resultado.get().trim().isEmpty()) {
             nombreJugadorActual = resultado.get().trim();
             System.out.println("Intentando iniciar sesión como: " + nombreJugadorActual);
-
-            jugadorActual = Sesion.cargarJugadorPorNombre(nombreJugadorActual);
+            jugadorActual = Sesion.cargarJugadorPorNombre(nombreJugadorActual); // Usa Sesion importado
 
             if (jugadorActual != null) {
                 System.out.println("Jugador encontrado: " + jugadorActual.getNombre());
                 mostrarPantallaDeInicio();
             } else {
                 System.out.println("Jugador no encontrado. Mostrando pantalla de registro.");
-                mostrarPantallaRegistro(); // Intenta mostrar el registro
+                mostrarPantallaRegistro();
             }
         } else {
             System.out.println("Inicio cancelado.");
-            mostrarPantallaDeInicio(); // Muestra puntuaciones si se cancela
+            mostrarPantallaDeInicio();
         }
 
          primaryStage.setOnCloseRequest(event -> {
@@ -81,115 +93,98 @@ public class App extends Application {
     }
 
     public static void mostrarPantallaDeInicio() {
+        String fxmlPath = "/Escenas/PantallaDeInicio.fxml";
         try {
-            System.out.println("Cargando PantallaDeInicio.fxml...");
-            FXMLLoader loader = new FXMLLoader(App.class.getResource("/Escenas/PantallaDeInicio.fxml"));
-            if (loader.getLocation() == null) throw new IOException("FXML no encontrado: /Escenas/PantallaDeInicio.fxml");
+            System.out.println("Cargando " + fxmlPath + "...");
+            URL fxmlUrl = App.class.getResource(fxmlPath);
+            if (fxmlUrl == null) fxmlUrl = App.class.getResource("Escenas/PantallaDeInicio.fxml");
+            if (fxmlUrl == null) throw new IOException("FXML no encontrado: " + fxmlPath);
+
+            FXMLLoader loader = new FXMLLoader(fxmlUrl);
             Parent root = loader.load();
             Scene scene = new Scene(root);
             primaryStage.setTitle("Mejores Puntuaciones");
             primaryStage.setScene(scene);
             System.out.println("Mostrando PantallaDeInicio.");
-            primaryStage.show(); // Asegurarse de que se muestre
-        } catch (IOException | IllegalStateException e) {
-            mostrarError("Error al cargar la pantalla de inicio", e);
+            primaryStage.show();
         } catch (Exception e) {
-             mostrarError("Error inesperado al mostrar pantalla de inicio", e);
+            mostrarError("Error al cargar la pantalla de inicio", e);
         }
     }
 
-    // --- MÉTODO ACTUALIZADO ---
-    public static void mostrarPantallaRegistro() {
-         String fxmlPath = "/Escenas/RegistroJugador.fxml"; // Ruta al FXML
+     public static void mostrarPantallaRegistro() {
+         String fxmlPath = "/Escenas/RegistroJugador.fxml";
          try {
             System.out.println("Intentando cargar FXML: " + fxmlPath);
-            URL fxmlUrl = App.class.getResource(fxmlPath); // Obtener URL primero
-
-            if (fxmlUrl == null) {
-                 // Si no se encuentra, intentar sin la barra inicial (ruta relativa)
-                 System.out.println("No encontrado con ruta absoluta, intentando ruta relativa: Escenas/RegistroJugador.fxml");
-                 fxmlUrl = App.class.getResource("Escenas/RegistroJugador.fxml");
-            }
-
-            if (fxmlUrl == null) {
-                 // Si sigue sin encontrarse, lanzar error claro
-                 throw new IOException("No se pudo encontrar el archivo FXML en ninguna de las rutas probadas: " + fxmlPath + " o Escenas/RegistroJugador.fxml");
-            }
+            URL fxmlUrl = App.class.getResource(fxmlPath);
+            if (fxmlUrl == null) fxmlUrl = App.class.getResource("Escenas/RegistroJugador.fxml");
+            if (fxmlUrl == null) throw new IOException("No se pudo encontrar FXML: " + fxmlPath);
 
             System.out.println("URL del FXML encontrada: " + fxmlUrl);
-            FXMLLoader loader = new FXMLLoader(fxmlUrl); // Cargar desde la URL encontrada
+            FXMLLoader loader = new FXMLLoader(fxmlUrl);
             Parent root = loader.load();
-            System.out.println("FXML de Registro cargado correctamente.");
+            System.out.println("FXML de Registro cargado.");
 
             RegistroJugadorController controller = loader.getController();
             if (controller != null) {
                  System.out.println("Controlador RegistroJugadorController obtenido.");
                  controller.setNombreInicial(nombreJugadorActual);
             } else {
-                 System.err.println("Advertencia: No se pudo obtener el controlador RegistroJugadorController desde el FXML.");
+                 System.err.println("Advertencia: Controlador RegistroJugadorController es null.");
             }
 
             Scene scene = new Scene(root);
             primaryStage.setTitle("Registrar Nuevo Jugador");
             primaryStage.setScene(scene);
-            System.out.println("Escena de Registro establecida en primaryStage.");
-            primaryStage.show(); // Asegurarse de que se muestre
+            System.out.println("Escena de Registro establecida.");
+            primaryStage.show();
 
-        } catch (IOException e) {
-            System.err.println("IOException al cargar " + fxmlPath + ":");
-            e.printStackTrace();
-            mostrarError("Error fatal al cargar la pantalla de registro. Verifica que el archivo FXML exista en la ruta correcta y no tenga errores.", e);
-        } catch (IllegalStateException e) {
-            System.err.println("IllegalStateException (posiblemente problema en FXML o controlador de registro):");
-            e.printStackTrace();
-            mostrarError("Error interno al configurar la pantalla de registro.", e);
         } catch (Exception e) {
-            System.err.println("Excepción inesperada al mostrar pantalla de registro:");
-            e.printStackTrace();
-            mostrarError("Error inesperado al mostrar el registro.", e);
+            mostrarError("Error al mostrar la pantalla de registro", e);
         }
     }
-    // --- FIN MÉTODO ACTUALIZADO ---
 
     public static void mostrarPantallaDeJuego() {
          String fxmlPath = "/Escenas/PantallaDeJuego.fxml";
         try {
-            System.out.println("Cargando PantallaDeJuego.fxml...");
-            FXMLLoader loader = new FXMLLoader(App.class.getResource(fxmlPath));
-             if (loader.getLocation() == null) throw new IOException("FXML no encontrado: " + fxmlPath);
+            System.out.println("Cargando " + fxmlPath + "...");
+            URL fxmlUrl = App.class.getResource(fxmlPath);
+             if (fxmlUrl == null) throw new IOException("FXML no encontrado: " + fxmlPath);
+
+            FXMLLoader loader = new FXMLLoader(fxmlUrl);
             Parent root = loader.load();
             PantallaDeJuego controller = loader.getController();
 
-            Scene scene = new Scene(root);
-
-            if (controller != null) {
-                controller.setupInputHandlers(scene);
-                scene.setUserData(controller);
-                 System.out.println("Controlador PantallaDeJuego y manejadores de entrada configurados.");
-            } else {
+            if (controller == null) {
                  System.err.println("Error crítico: Controlador de PantallaDeJuego no encontrado.");
-                 mostrarError("Error interno al iniciar el juego.", null);
+                 mostrarError("Error interno al iniciar el juego (controlador nulo).", null);
                  return;
             }
+             System.out.println("Controlador PantallaDeJuego obtenido.");
 
-            primaryStage.setTitle("Juego - " + (jugadorActual != null ? jugadorActual.getNombre() : "Invitado"));
+            Scene scene = new Scene(root);
+
             primaryStage.setScene(scene);
-             System.out.println("Mostrando PantallaDeJuego.");
-            // primaryStage.show(); // No es necesario si ya está visible
+            primaryStage.setTitle("Juego - " + (jugadorActual != null ? jugadorActual.getNombre() : "Invitado"));
+            System.out.println("Escena de Juego establecida.");
 
-        } catch (IOException | IllegalStateException e) {
-            mostrarError("Error al cargar la pantalla de juego", e);
+            controller.setupInputHandlers(scene);
+            scene.setUserData(controller);
+
+             System.out.println("Mostrando PantallaDeJuego.");
+            // primaryStage.show();
+
         } catch (Exception e) {
-             mostrarError("Error inesperado al mostrar pantalla de juego", e);
+            mostrarError("Error al cargar la pantalla de juego", e);
         }
     }
 
-    public static String getNombreJugadorActual() { return nombreJugadorActual; }
-    public static Jugador getJugadorActual() { return jugadorActual; }
-    public static void setJugadorActual(Jugador jugador) {
-        jugadorActual = jugador;
-        nombreJugadorActual = (jugador != null) ? jugador.getNombre() : null;
-    }
+     public static String getNombreJugadorActual() { return nombreJugadorActual; }
+     public static Jugador getJugadorActual() { return jugadorActual; }
+     public static void setJugadorActual(Jugador jugador) {
+         jugadorActual = jugador;
+         nombreJugadorActual = (jugador != null) ? jugador.getNombre() : null;
+     }
 
     private static void crearDirectoriosSiNoExisten() {
         System.out.println("Verificando/creando directorios...");
@@ -207,20 +202,19 @@ public class App extends Application {
                 e.printStackTrace();
             }
         }
-         System.out.println("Verificación de directorios completada.");
+         // System.out.println("Verificación de directorios completada.");
     }
 
      public static void mostrarError(String mensaje, Exception excepcion) {
-         System.err.println("MOSTRANDO ERROR: " + mensaje); // Log para consola
+         System.err.println("MOSTRANDO ERROR: " + mensaje);
          if (excepcion != null) {
              excepcion.printStackTrace();
          }
-         // Intentar mostrar Alert en el hilo de JavaFX
          javafx.application.Platform.runLater(() -> {
               Alert alert = new Alert(AlertType.ERROR);
               alert.setTitle("Error");
               alert.setHeaderText(null);
-              alert.setContentText(mensaje + (excepcion != null ? "\nDetalles: " + excepcion.getMessage() : ""));
+              alert.setContentText(mensaje + (excepcion != null ? "\nDetalles: " + excepcion.getClass().getSimpleName() + " - " + excepcion.getMessage() : ""));
               alert.showAndWait();
          });
      }
