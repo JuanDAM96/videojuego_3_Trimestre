@@ -1,5 +1,5 @@
 package Modelo;
-
+// TODO generar documentacion
 
 
 import java.util.ArrayList;
@@ -15,11 +15,10 @@ public class Objeto {
 
 
     private static ArrayList<ImageView>;
-    /** Indica si el objeto bloquea el paso. */
     private boolean bloqueo;
 
     @FXML
-    private ImageView rec;
+    private ImageView vista;
 
     /**
      * Constructor de la clase ObjetoEscenario.
@@ -27,8 +26,8 @@ public class Objeto {
      * @param objetoChar Carácter que representa el objeto.
      * @param bloqueo Indica si el objeto bloquea el paso (true) o no (false).
      */
-    public Objeto(ImageView rec, boolean bloqueo) {
-        this.rec = rec;
+    public Objeto(ImageView vista, boolean bloqueo) {
+        this.vista = vista;
         this.bloqueo = bloqueo;
     }
 
@@ -37,30 +36,20 @@ public class Objeto {
      * 
      * @return true si el objeto bloquea, false en caso contrario.
      */
-    public boolean isBloqueo() {
-        return bloqueo;
-    }
+    public boolean isBloqueo() {return bloqueo;}
 
     /**
      * Establece si el objeto bloquea el paso.
      * 
      * @param bloqueo true para bloquear el paso, false para permitirlo.
      */
-    public void setBloqueo(boolean bloqueo) {
-        this.bloqueo = bloqueo;
-    }
+    public void setBloqueo(boolean bloqueo) {this.bloqueo = bloqueo;}
 
-    public ImageView getRec() {
-        return rec;
-    }
+    public ImageView getVista() {return vista;}
 
-    public void setRec(ImageView rec) {
-        this.rec = rec;
-    }
+    public void setRec(ImageView vista) {this.vista = vista;}
 
-    public static void almacenImagen() {
-        
-    }
+    public static void almacenImagen() {}
 
 
 }
