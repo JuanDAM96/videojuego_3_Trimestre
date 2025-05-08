@@ -6,15 +6,15 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.GridPane?>
 
-<AnchorPane fx:id="rootPane" prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="PantallaDeJuego">
+<AnchorPane fx:id="paneRaiz" prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="PantallaDeJuego">
    <children>
-      <GridPane fx:id="gridPaneMapa" hgap="0.0" layoutX="14.0" layoutY="14.0" vgap="0.0">
+      <GridPane fx:id="mapaJuego" hgap="0.0" layoutX="14.0" layoutY="14.0" vgap="0.0">
          <padding>
               <Insets/>
           </padding>
       </GridPane>
 
-      <ImageView fx:id="playerImageView" fitHeight="32.0" fitWidth="32.0" pickOnBounds="true" preserveRatio="true" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0"/>
+      <ImageView fx:id="jugador" fitHeight="32.0" fitWidth="32.0" pickOnBounds="true" preserveRatio="true" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0"/>
 
       <TextArea fx:id="txtComentarios" editable="false" layoutX="14.0" layoutY="500.0" prefHeight="80.0" prefWidth="770.0" wrapText="true" AnchorPane.bottomAnchor="14.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" />
    </children>
