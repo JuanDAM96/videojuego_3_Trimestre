@@ -1,5 +1,4 @@
 package Controlador;
-// TODO generar documentacion
 
 import javafx.geometry.Rectangle2D;
 import javafx.scene.image.Image;
@@ -11,7 +10,14 @@ import Modelo.Escenario;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TileManager {
+/**
+ * Gestiona la creacion y carga de Tiles
+ * 
+ * @author Santiago
+ * @author Juan
+ * @version 0.3.3
+ */
+public class GestorTile {
     private static final String RUTA_TILE = "file:./dungeon_tiles.png";
     private static final int TAMANO = 32;
 
@@ -20,12 +26,14 @@ public class TileManager {
 
     private static Map<Character, Point> coordenadas = new HashMap<>();
 
+    // Conjunto estatico, sirve para agrupar
     static {
         coordenadas.put('E', new Point(8, 1));
         coordenadas.put('O', new Point(2, 1));
         coordenadas.put('P', new Point(5, 5));
     }
 
+    // Sirve para una ejecucion de clase, destinado para depuracion
     static {
         try {
             System.out.println("Intentando cargar tileset desde: " + RUTA_TILE);
@@ -56,6 +64,12 @@ public class TileManager {
         }
     }
 
+    /**
+     * Getter de Tile 
+     * 
+     * @param tipoTile Es el tipo del Tile que va a cargar, Personaje (P)
+     * @return Devuelve la imagen según su tipo
+     */
     public static Image getTileImage(char tipoTile) {
         if (tile == null) return null;
 
@@ -89,12 +103,18 @@ public class TileManager {
             return tileImage;
         } catch (Exception e) {
             System.err.println("Error al recortar el tile '" + tipoTile + "' en (" + x + "," + y + "): " + e.getMessage());
-            return getTileImage('E'); // Usar fallback en caso de error de recorte
+            return getTileImage('E');
         }
     }
 
-    public static ImageView crearTileView(char tileType) {
-        Image img = getTileImage(tileType);
+    /**
+     * Creacion del Tile
+     * 
+     * @param tipoTile Es el tipo del Tile que va a crear, Personaje (P)
+     * @return Devuelve la vista de la imagen, es logico, no?
+     */
+    public static ImageView crearTileView(char tipoTile) {
+        Image img = getTileImage(tipoTile);
         ImageView vista = new ImageView(img);
         vista.setFitWidth(TAMANO);
         vista.setFitHeight(TAMANO);
@@ -103,6 +123,12 @@ public class TileManager {
         return vista;
     }
 
+    /**
+     * Añade Tiles a la matriz
+     * 
+     * @param gridPane Donde se añade 
+     * @param escenario El escenario que pinta
+     */
     public static void agregarTilesAlGrid(GridPane gridPane, Escenario escenario) {
         if (gridPane == null || escenario == null) {
             System.err.println("Error en agregarTilesAlGrid: GridPane o Escenario es null.");
@@ -120,9 +146,18 @@ public class TileManager {
         System.out.println("Tiles agregados al GridPane. Total hijos: " + gridPane.getChildren().size());
     }
 
+    /**
+     * Punto en el que se encuentra las cosas
+     */
     private static class Point {
         int col, lin;
 
+        /**
+         * Constructor parametrizado
+         * 
+         * @param col la columna
+         * @param lin la linea
+         */
         Point(int col, int lin) {
             this.col = col;
             this.lin = lin;

@@ -1,5 +1,5 @@
 
-// TODO generar documentacion
+
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
@@ -9,6 +9,14 @@ import java.io.IOException;
 import Controlador.Sesion;
 import Modelo.Jugador;
 
+/**
+ * Clase Registro
+ * Se encarga de registrar nuevos jugadores
+ * 
+ * @author Santiago
+ * @author Juan
+ * @version 0.3.3
+ */
 public class RegistroJugadorController {
 
     @FXML private TextField txtNombre;
@@ -17,17 +25,27 @@ public class RegistroJugadorController {
 
     private String nombreInicial;
 
+    /**
+     * Introduce el nombre del jugador
+     * @param nombre
+     */
     public void setNombreInicial(String nombre) {
         this.nombreInicial = nombre;
         if (txtNombre != null) txtNombre.setText(nombre);
     }
 
+    /**
+     * Esto solo inicializa la clase por asi decirlo
+     */
     @FXML
     public void initialize() {
         if (nombreInicial != null) txtNombre.setText(nombreInicial);
         System.out.println("Inicializando RegistroJugadorController...");
     }
 
+    /**
+     * Registra al nuevo jugador
+     */
     @FXML
     private void registrarJugador() {
         System.out.println("Método registrarJugador() llamado.");
@@ -50,6 +68,12 @@ public class RegistroJugadorController {
         } else mostrarAlerta("Error de Registro", "No se pudo guardar el jugador. Revisa la consola.");
     }
 
+    /**
+     * Muestra la Alerta visualmente
+     * 
+     * @param titulo Titulo de la alerta
+     * @param mensaje Mensaje de la alerta
+     */
     private void mostrarAlerta(String titulo, String mensaje) {
         Alert alerta = new Alert(AlertType.WARNING);
         alerta.setTitle(titulo);

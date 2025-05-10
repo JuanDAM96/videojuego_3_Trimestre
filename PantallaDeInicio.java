@@ -1,5 +1,4 @@
 
-// TODO generar documentacion
 
 import Modelo.Puntuacion;
 import javafx.collections.FXCollections;
@@ -13,6 +12,14 @@ import java.io.IOException;
 import java.util.List;
 import Controlador.SQLite;
 
+/**
+ * Clase Pantalla de inicio
+ * Pantalla inicial que se muestra al jugador
+ * 
+ * @author Santiago
+ * @author Juan
+ * @version 0.3.3
+ */
 public class PantallaDeInicio {
 
     @FXML private TableView<Puntuacion> tablaPuntuaciones;
@@ -23,6 +30,9 @@ public class PantallaDeInicio {
 
     private ObservableList<Puntuacion> listaPuntuaciones = FXCollections.observableArrayList();
 
+    /**
+     * Metodo fxml para inicializar la escena
+     */
     @FXML
     public void initialize() {
         columnaNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
@@ -33,6 +43,9 @@ public class PantallaDeInicio {
         tablaPuntuaciones.setItems(listaPuntuaciones);
     }
 
+    /**
+     * Carga las puntuaciones en la tabla
+     */
     private void cargarPuntuaciones() {
         List<Puntuacion> topPuntuaciones = SQLite.obtenerMejoresPuntuaciones();
         if (topPuntuaciones != null) {
@@ -41,6 +54,10 @@ public class PantallaDeInicio {
         } else System.err.println("No se pudieron cargar las puntuaciones.");
     }
 
+    /**
+     * Boton para iniciar partida
+     * @throws IOException No encuentra el archivo necesario
+     */
     @FXML
     private void iniciarPartida() throws IOException {App.mostrarPantallaDeJuego();}
 }

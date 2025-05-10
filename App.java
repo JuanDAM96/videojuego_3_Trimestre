@@ -1,4 +1,3 @@
-// TODO generar documentacio
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -17,11 +16,21 @@ import java.util.Optional;
 import Controlador.SQLite;
 import Controlador.Sesion;
 import Controlador.Control;
-import Controlador.TileManager;
+import Controlador.GestorTile;
 import Modelo.Jugador;
 import Modelo.Puntuacion;
 import Modelo.Escenario;
 
+/**
+ * Clase App extiende de Application
+ * 
+ * La Clase Principal donde se llama y declara las clases y sus metodos, además
+ * de ejecutarse el codigo
+ * 
+ * @author Santiago
+ * @author Juan
+ * @version 0.3.3
+ */
 public class App extends Application {
 
     private static Stage primeraEsc;
@@ -33,16 +42,26 @@ public class App extends Application {
     private static final String DIRECTORIO_PARTIDAS = "partidas";
     private static final String[] DIRECTORIOS_NECESARIOS = {DIRECTORIO_ESCENARIOS, DIRECTORIO_JUGADORES, DIRECTORIO_PARTIDAS};
 
+    /**
+     * Inicia la vista programa
+     * Metodo soobrescrito de Application
+     */
     @Override
     public void init() throws Exception {
         super.init();
         System.out.println("Ejecutando App.init()...");
         crearDirectoriosSiNoExisten();
         SQLite.inicializarBaseDatos();
-        Sesion.crearEscenarioPorDefectoSiNoExiste();
+        for (int i = 0; i < 4; i++) Sesion.crearEscenarios(i);
         System.out.println("App.init() completado.");
     }
 
+    /**
+     * Comienza la escena
+     * Metodo soobrescrito de Application
+     * 
+     * @param stage (no lo cambio por ser soobreescrito) Escena
+     */
     @Override
     public void start(Stage stage) {
         primeraEsc = stage;
@@ -81,6 +100,9 @@ public class App extends Application {
         });
     }
 
+    /**
+     * Muestra la pantalla inicial con un boton de inicio y una tabla
+     */
     public static void mostrarPantallaDeInicio() {
         String rutaFXML = "/Escenas/PantallaDeInicio.fxml";
         try {
@@ -100,6 +122,9 @@ public class App extends Application {
         } catch (Exception e) {mostrarError("Error al cargar la pantalla de inicio", e);}
     }
 
+    /**
+     * Muestra pantalla de registro en caso de no exista el usuario o archivo
+     */
     public static void mostrarPantallaRegistro() {
         String rutaFXML = "/Escenas/RegistroJugador.fxml";
         try {
@@ -129,6 +154,9 @@ public class App extends Application {
         } catch (Exception e) {mostrarError("Error al mostrar la pantalla de registro", e);}
     }
 
+    /**
+     * La pantalla principal con un GridPane y un textArea
+     */
     public static void mostrarPantallaDeJuego() {
         String rutaFXML = "/Escenas/PantallaDeJuego.fxml";
         try {
@@ -161,15 +189,33 @@ public class App extends Application {
         } catch (Exception e) {mostrarError("Error al cargar la pantalla de juego", e);}
     }
 
+    /**
+     * Getter del nombre del jugador actual
+     * 
+     * @return Nombre del jugador como String
+     */
     public static String getNombreJugadorActual() {return nombreJugadorActual;}
 
+    /**
+     * Getter del Jugador actual
+     * 
+     * @return Jugador del modelo Jugador
+     */
     public static Jugador getJugadorActual() {return jugadorActual;}
 
+    /**
+     * Setter del jugador
+     * 
+     * @param jugador Introduce el modelo del jugador
+     */
     public static void setJugadorActual(Jugador jugador) {
         jugadorActual = jugador;
         nombreJugadorActual = (jugador != null) ? jugador.getNombre() : null;
     }
 
+    /**
+     * Crea los directorios partidas, escenarios y jugadores
+     */
     private static void crearDirectoriosSiNoExisten() {
         System.out.println("Verificando/creando directorios...");
         for (String nombreDirectorio : DIRECTORIOS_NECESARIOS) {
@@ -187,6 +233,11 @@ public class App extends Application {
         }
     }
 
+    /**
+     * Muestra de errores en ventanas para informar a usuarios
+     * @param mensaje Mensaje que se escribe en la ventana
+     * @param excepcion Excepcion que salta
+     */
     public static void mostrarError(String mensaje, Exception excepcion) {
         System.err.println("MOSTRANDO ERROR: " + mensaje);
 
@@ -201,5 +252,10 @@ public class App extends Application {
         });
     }
 
+    /**
+     * Ejecuta el progama
+     * 
+     * @param args Array de String
+     */
     public static void main(String[] args) {launch(args);}
 }

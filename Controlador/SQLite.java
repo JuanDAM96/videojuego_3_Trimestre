@@ -1,6 +1,4 @@
 package Controlador;
-// TODO generar documentacion
-// TODO Añadir falsos positivos
 
 import Modelo.Puntuacion;
 import java.sql.*;
@@ -10,6 +8,10 @@ import java.util.List;
 /**
  * Gestiona la interacción con la base de datos SQLite, específicamente para la
  * tabla de Puntuaciones.
+ * 
+ * @author Santiago
+ * @author Juan
+ * @version 0.3.3
  */
 public class SQLite {
     private static final String URL_DB = "jdbc:sqlite:PuntuacionesJuego.db";
@@ -44,6 +46,8 @@ public class SQLite {
      * @return Una lista de objetos Puntuacion, ordenada de mayor a menor.
      */
     public static List<Puntuacion> obtenerMejoresPuntuaciones() {
+        for (int i = 0; i < 20; i++) guardarPuntuacion("Defectos", i); // Esto son falsos positivos, para mostrar el rendimiento de la funcion
+
         List<Puntuacion> listaPuntuaciones = new ArrayList<>();
         String sql = "SELECT nombre, puntuacion FROM Puntuaciones ORDER BY puntuacion DESC LIMIT 10";
 

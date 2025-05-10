@@ -1,10 +1,13 @@
 package Modelo;
-// TODO generar documentacion
 
 import java.util.List;
 
 /**
  * Representa el mapa del juego, cargado desde un archivo.
+ * 
+ * @author Santiago
+ * @author Juan
+ * @version 0.3.3
  */
 public class Escenario {
 
@@ -41,18 +44,25 @@ public class Escenario {
             this.mapaTiles = new char[filas][columnas];
             for (int i = 0; i < filas; i++) {
                 String filaStr = (i < mapaLista.size()) ? mapaLista.get(i) : "";
-                for (int j = 0; j < columnas; j++) {
-                    this.mapaTiles[i][j] = (j < filaStr.length()) ? filaStr.charAt(j) : ' ';
+                for (int j = 0; j < columnas; j++) this.mapaTiles[i][j] = (j < filaStr.length()) ? filaStr.charAt(j) : ' ';
                 }
-            }
         } else {
             this.mapaTiles = new char[filas][columnas];
             System.err.println("Advertencia: Se recibió una lista de mapa vacía o nula para Escenario.");
         }
     }
 
+    /**
+     * Getter de Filas
+     * @return Devuelve la posicion de la fila
+     */
     public int getFilas() {return filas;}
 
+    /**
+     * Getter de Columna
+     * 
+     * @return Devuelve las columnas
+     */
     public int getColumnas() {return columnas;}
 
     /**
@@ -68,6 +78,13 @@ public class Escenario {
         return '\0';
     }
 
+    /**
+     * Setter de Tile
+     * 
+     * @param fila Fila que se encuentra el Objeto
+     * @param columna Columna que se encuentra el Objeto
+     * @param tipo El tipo del Objeto
+     */
     public void setTile(int fila, int columna, char tipo) {
         if (mapaTiles != null && fila >= 0 && fila < filas && columna >= 0 && columna < columnas)
             mapaTiles[fila][columna] = tipo;

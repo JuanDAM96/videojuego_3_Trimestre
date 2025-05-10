@@ -1,11 +1,10 @@
-// TODO generar documentacion
+
 
 import Modelo.Escenario;
 import Modelo.Jugador;
 import Controlador.Control;
 import Controlador.Sesion;
-import Controlador.TileManager;
-
+import Controlador.GestorTile;
 import javafx.animation.AnimationTimer;
 import javafx.fxml.FXML;
 import javafx.geometry.Point2D;
@@ -23,6 +22,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.HashSet;
 
+/**
+ * Pantaalla de juego
+ * Lugar donde supuestamente tiene que jugar el jugador
+ * 
+ * @author Santiago
+ * @author Juan
+ * @version 0.3.3
+ */
 public class PantallaDeJuego {
 
     @FXML
@@ -40,6 +47,9 @@ public class PantallaDeJuego {
 
     private final int TAMANO_TILE = 32;
 
+    /**
+     * Incializa panatalla de juego
+     */
     @FXML
     public void initialize() {
         System.out.println("Inicializando PantallaDeJuego...");
@@ -49,7 +59,7 @@ public class PantallaDeJuego {
             return;
         }
 
-        TileManager.agregarTilesAlGrid(mapaJuego, escenarioActual);
+        GestorTile.agregarTilesAlGrid(mapaJuego, escenarioActual);
         txtComentarios.appendText("Escenario dibujado.\n");
 
         visualizacionJug();
@@ -59,6 +69,9 @@ public class PantallaDeJuego {
         paneRaiz.setFocusTraversable(true);
     }
 
+    /**
+     * Carga los datos de los archivos
+     */
     private void cargarDatosJuego() {
         escenarioActual = Sesion.cargarEscenario("escenarios/nivel1.txt");
         if (escenarioActual == null) {
@@ -74,12 +87,15 @@ public class PantallaDeJuego {
         }
     }
 
+    /**
+     * Muestra el jugador
+     */
     private void visualizacionJug() {
         if (jugador == null) {
             System.err.println("Error: playerImageView es null.");
             return;
         }
-        Image jugadorImg = TileManager.getTileImage('P');
+        Image jugadorImg = GestorTile.getTileImage('P');
         if (jugadorImg != null) {
             jugador.setImage(jugadorImg);
             jugador.setFitWidth(TAMANO_TILE);
@@ -94,6 +110,11 @@ public class PantallaDeJuego {
         }
     }
 
+    /**
+     * Captura las entradas
+     * 
+     * @param escena La escena que se tiene que capturar las acciones del jugador
+     */
     public void setCapInp(Scene escena) {
         if (escena == null) return;
         
@@ -108,6 +129,9 @@ public class PantallaDeJuego {
         txtComentarios.appendText("Controles WASD activados.\n");
     }
 
+    /**
+     * Polling del juego
+     */
     private void bucleJuego() {
         if (bucleJuego != null) bucleJuego.stop();
         System.out.println("Iniciando bucle del juego...");
@@ -125,16 +149,21 @@ public class PantallaDeJuego {
         bucleJuego.start();
     }
 
+    /**
+     * Actualiza la posicion del jugador
+     */
     private void actJugPos() {
-        if (jugadorActual == null || jugador == null || mapaJuego == null) {
-            return;
-        }
+        if (jugadorActual == null || jugador == null || mapaJuego == null) return;
+        
         double pixelX = jugadorActual.getColumnaActual() * TAMANO_TILE + mapaJuego.getLayoutX();
         double pixelY = jugadorActual.getFilaActual() * TAMANO_TILE + mapaJuego.getLayoutY();
         jugador.setTranslateX(pixelX);
         jugador.setTranslateY(pixelY);
     }
 
+    /**
+     * Detiene el polling del juego
+     */
     public void paraJuego() {
         if (bucleJuego != null) {
             bucleJuego.stop();

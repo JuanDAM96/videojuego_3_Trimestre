@@ -1,11 +1,18 @@
 package Controlador;
-// TODO generar documentacion
+// TODO movimiento erroneo (opcional, me hace gracia)
 import Modelo.Escenario;
 import Modelo.Jugador;
 import javafx.scene.input.KeyCode;
 import java.util.HashSet; 
 import java.util.Set;
 
+/**
+ * Clase que controla el movimiento del jugador
+ * 
+ * @author Santiago
+ * @author Juan
+ * @version 0.3.3
+ */
 public class Control {
 
     private static final Set<KeyCode> teclasPresionadas = new HashSet<>();
@@ -48,8 +55,18 @@ public class Control {
         return true;
     }
 
+    /**
+     * Tecla que ha pulsado el jugador.
+     * Añade la tecla para moverse
+     * @param tecla Lector del teclado
+     */
     public static void agregarTecla(KeyCode tecla) {teclasPresionadas.add(tecla);}
 
+    /**
+     * Tecla que ha pulsado el jugador.
+     * Añade la tecla para moverse
+     * @param tecla Lector del teclado
+     */
     public static void eliminarTecla(KeyCode tecla) {teclasPresionadas.remove(tecla);}
 
     /**
